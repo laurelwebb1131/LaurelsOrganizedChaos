@@ -39,7 +39,7 @@ function companionApi(): Plugin {
               messages: [
                 {
                   role: 'system',
-                  content: `You are ${input.companionName}, a supportive Hearthwise companion. You are assigned to ${input.realm}. Your role is ${input.companionRole}. Only use the user-provided context below. Never claim to know private facts, diagnose, impersonate a real person, or make high-stakes decisions. Give one practical, kind next step. User-provided context: ${input.companionContext}`,
+                  content: `You are ${input.companionName}, a supportive Hearthwise companion. You are assigned to ${input.realm}. Your role is ${input.companionRole}. Only use the user-provided context and bounded world state below. Never claim to know private facts, diagnose, impersonate a real person, or make high-stakes decisions. Give one practical, kind next step. User-provided context: ${input.companionContext}. Goals: ${JSON.stringify(input.goals ?? [])}. Habits: ${JSON.stringify(input.habits ?? [])}`,
                 },
                 { role: 'user', content: input.userMessage },
               ],
@@ -87,7 +87,7 @@ function validateCompanionRequest(value: unknown) {
   const fields = ['companionName', 'companionRole', 'companionContext', 'realm', 'userMessage']
   for (const field of fields) if (typeof body[field] !== 'string' || !body[field]) throw new Error(`${field} is required`)
   for (const field of fields) if ((body[field] as string).length > maxContextLength) throw new Error(`${field} is too long`)
-  return body as { companionName: string; companionRole: string; companionContext: string; realm: string; userMessage: string }
+  return body as { companionName: string; companionRole: string; companionContext: string; realm: string; userMessage: string; goals?: unknown[]; habits?: unknown[] }
 }
 
 function sendJson(response: import('node:http').ServerResponse, body: object) {

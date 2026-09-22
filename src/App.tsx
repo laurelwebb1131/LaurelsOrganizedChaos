@@ -68,8 +68,8 @@ function App() {
     window.location.hash = `realm/${selectedLocation}`
   }
 
-  if (activeRoom === 'library') return <LibraryRoom onBack={leaveRoom} savedIdeas={worldState.savedIdeas} companions={worldState.companions} onSaveIdea={(idea) => setWorldState((state) => ({ ...state, savedIdeas: [...state.savedIdeas, idea] }))} />
-  if (activeRoom === 'home') return <HomeRoom onBack={leaveRoom} chores={worldState.chores} companions={worldState.companions} onChoresChange={(chores) => setWorldState((state) => ({ ...state, chores }))} />
+  if (activeRoom === 'library') return <LibraryRoom onBack={leaveRoom} savedIdeas={worldState.savedIdeas} companions={worldState.companions} goals={worldState.goals} habits={worldState.habits} onSaveIdea={(idea) => setWorldState((state) => ({ ...state, savedIdeas: [...state.savedIdeas, idea] }))} />
+  if (activeRoom === 'home') return <HomeRoom onBack={leaveRoom} chores={worldState.chores} companions={worldState.companions} goals={worldState.goals} habits={worldState.habits} onChoresChange={(chores) => setWorldState((state) => ({ ...state, chores }))} />
 
   return (
     <div className="world-app">
@@ -164,7 +164,7 @@ function CompanionCodex({ companions, onClose, onAdd }: { companions: Companion[
   </section></div>
 }
 
-function LibraryRoom({ onBack, savedIdeas, companions, onSaveIdea }: { onBack: () => void; savedIdeas: string[]; companions: Companion[]; onSaveIdea: (idea: string) => void }) {
+function LibraryRoom({ onBack, savedIdeas, companions, goals, habits, onSaveIdea }: { onBack: () => void; savedIdeas: string[]; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits; onSaveIdea: (idea: string) => void }) {
   const [idea, setIdea] = useState<string | null>(null)
   const guide = companions.find((companion) => companion.realm === 'The Library' || companion.realm === 'All realms') ?? companions[0]
   const ideas = [
@@ -192,13 +192,13 @@ function LibraryRoom({ onBack, savedIdeas, companions, onSaveIdea }: { onBack: (
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>68%</strong><small>weekly tending</small></div><div><strong>12</strong><small>open ideas</small></div><div><strong>3</strong><small>active goals</small></div></div></section>
     <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div>{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { onSaveIdea(idea); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
-    <CompanionChat companion={guide} realm="The Library" prompt="Help me choose my next idea" />
+    <CompanionChat companion={guide} realm="The Library" prompt="Help me choose my next idea" goals={goals} habits={habits} />
     <div className="room-note"><span className="owl-glyph">◉</span><div><strong>{guide?.name ?? 'Owl'} · {guide?.role ?? 'Library guide'}</strong><p>{savedIdeas.length ? `${savedIdeas.length} idea${savedIdeas.length === 1 ? '' : 's'} tucked onto your shelf.` : `“${guide?.context ?? 'A good idea is often just a question you have not asked yet.'}”`}</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> SELECT A SHELF TO EXPLORE</div>
   </div>
 }
 
-function HomeRoom({ onBack, chores, companions, onChoresChange }: { onBack: () => void; chores: typeof defaultWorldState.chores; companions: Companion[]; onChoresChange: (chores: typeof defaultWorldState.chores) => void }) {
+function HomeRoom({ onBack, chores, companions, goals, habits, onChoresChange }: { onBack: () => void; chores: typeof defaultWorldState.chores; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits; onChoresChange: (chores: typeof defaultWorldState.chores) => void }) {
   const completed = chores.filter((chore) => chore.done).length
   const toggleChore = (index: number) => onChoresChange(chores.map((chore, choreIndex) => choreIndex === index ? { ...chore, done: !chore.done } : chore))
 
@@ -220,13 +220,13 @@ function HomeRoom({ onBack, chores, companions, onChoresChange }: { onBack: () =
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>HEARTH HOUSE</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker blue-kicker"><span>⌂</span> FAMILY + EVERYDAY LIFE</div><h1>Hearth<br /><em>House</em></h1><p>The living room of your world: care, rhythms, and the work that keeps everyone held.</p><div className="room-progress"><div><strong>{completed}/{chores.length}</strong><small>tended today</small></div><div><strong>4</strong><small>people linked</small></div><div><strong>2</strong><small>rituals due</small></div></div></section>
     <section className="goal-panel home-panel"><div className="panel-topline"><span className="panel-label">TODAY AT HOME</span><span className="home-weather">☾ 64°</span></div>{chores.map((chore, index) => <button className={`home-chore ${chore.done ? 'done' : ''}`} key={chore.label} onClick={() => toggleChore(index)}><span className="chore-check">{chore.done ? '✓' : ''}</span><span><strong>{chore.label}</strong><small>{chore.detail}</small></span><b>›</b></button>)}<div className="home-summary"><span className="home-spark">✦</span><p>{completed === chores.length ? 'The house is settled for tonight.' : 'One small tending can make the whole room feel lighter.'}</p></div></section>
-    <CompanionChat companion={companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')} realm="Hearth House" prompt="Help me make home feel lighter" />
+    <CompanionChat companion={companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')} realm="Hearth House" prompt="Help me make home feel lighter" goals={goals} habits={habits} />
     <div className="room-note"><span className="owl-glyph blue-owl">☾</span><div><strong>{companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')?.name ?? 'Hearth'} · household guide</strong><p>“{companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')?.context ?? 'Care is not one grand gesture. It is the little things, remembered.'}”</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> TEND A CHORE TO MARK IT COMPLETE</div>
   </div>
 }
 
-function CompanionChat({ companion, realm, prompt }: { companion?: Companion; realm: string; prompt: string }) {
+function CompanionChat({ companion, realm, prompt, goals, habits }: { companion?: Companion; realm: string; prompt: string; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('')
   const [messages, setMessages] = useState<{ from: 'you' | 'guide'; text: string }[]>([])
@@ -242,7 +242,9 @@ function CompanionChat({ companion, realm, prompt }: { companion?: Companion; re
     setDraft('')
     setIsThinking(true)
     try {
-      const reply = await requestCompanionReply({ companionName: guideName, companionRole: companion?.role ?? `${realm} guide`, companionContext: companion?.context ?? '', realm, userMessage: clean })
+      const realmGoals = goals.filter((goal) => goal.realm === realm || goal.realm === 'All realms').map(({ title, realm: goalRealm, progress, nextStep }) => ({ title, realm: goalRealm, progress, nextStep }))
+      const realmHabits = habits.filter((habit) => habit.realm === realm || habit.realm === 'All realms').map(({ title, realm: habitRealm, cadence, completedToday }) => ({ title, realm: habitRealm, cadence, completedToday }))
+      const reply = await requestCompanionReply({ companionName: guideName, companionRole: companion?.role ?? `${realm} guide`, companionContext: companion?.context ?? '', realm, userMessage: clean, goals: realmGoals, habits: realmHabits })
       setMessages((current) => [...current, { from: 'guide', text: reply }])
     } catch {
       setMessages((current) => [...current, { from: 'guide', text: fallback }])
