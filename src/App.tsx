@@ -117,7 +117,7 @@ function App() {
               </section>
 
               <div className="dashboard-grid">
-                <section className="panel tasks-panel">
+                <section className="panel tasks-panel today-tasks">
                   <div className="panel-heading">
                     <div><h2>On your plate</h2><p>Keep it close. Keep it kind.</p></div>
                     <button className="text-button" onClick={() => setNotice('A new task can be added from your Quests room.')}>View all <span>→</span></button>
@@ -134,7 +134,7 @@ function App() {
                   <button className="add-task" onClick={() => setNotice('A new task can be added from your Quests room.')}> <span>＋</span> Add a little something</button>
                 </section>
 
-                <section className="panel familiar-panel">
+                <section className="panel familiar-panel lead-familiar">
                   <div className="familiar-top"><span className="familiar-label"><span>✦</span> Your familiar · Juniper</span><span className="online-dot">● here</span></div>
                   <div className="familiar-message"><div className="familiar-avatar" aria-hidden="true"><div className="ear left" /><div className="ear right" /><span>☾</span></div><div><h2>A gentle nudge</h2><p>“You’ve got a lot of open loops, love. What if the project follow-up is the one thread you pull before lunch?”</p><button className="link-button" onClick={() => setNotice('That thread has been marked as your next brave thing.')}>Make it my next brave thing <span>→</span></button></div></div>
                   <CrowIllustration />
