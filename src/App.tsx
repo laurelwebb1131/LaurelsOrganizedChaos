@@ -177,29 +177,40 @@ function CloudBands() {
 }
 
 function MythicDragon({ position }: { position: [number, number, number] }) {
-  return <group position={position} scale={.45} rotation={[0.1, -0.4, 0.18]}>
-    <mesh castShadow><capsuleGeometry args={[.17, .95, 8, 16]} /><meshStandardMaterial color="#2a1839" emissive="#9257e3" emissiveIntensity={.45} roughness={.46} metalness={.18} /></mesh>
-    <mesh position={[0, .54, .02]}><sphereGeometry args={[.23, 18, 18]} /><meshStandardMaterial color="#2a1839" roughness={.5} /></mesh>
-    <mesh position={[-.28, .1, 0]} rotation={[0, .2, -.35]}><coneGeometry args={[.5, .9, 3]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.3} /></mesh>
-    <mesh position={[.28, .1, 0]} rotation={[0, -.2, .35]}><coneGeometry args={[.5, .9, 3]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.3} /></mesh>
-    <mesh position={[-.08, .58, .2]}><sphereGeometry args={[.035, 10, 10]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
-    <mesh position={[.08, .58, .2]}><sphereGeometry args={[.035, 10, 10]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+  return <group position={position} scale={.48} rotation={[0.1, -0.4, 0.18]}>
+    <mesh castShadow position={[0, 0, 0]}><capsuleGeometry args={[.2, 1.15, 12, 20]} /><meshStandardMaterial color="#2a1839" emissive="#5b2f86" emissiveIntensity={.32} roughness={.42} metalness={.25} /></mesh>
+    <mesh castShadow position={[0, .7, .02]}><sphereGeometry args={[.3, 24, 20]} /><meshStandardMaterial color="#35204a" roughness={.4} metalness={.2} /></mesh>
+    <mesh position={[0, .98, .03]} rotation={[0, 0, 0]}><coneGeometry args={[.13, .4, 5]} /><meshStandardMaterial color="#4b2b62" /></mesh>
+    <mesh position={[-.1, .78, .26]}><sphereGeometry args={[.045, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[.1, .78, .26]}><sphereGeometry args={[.045, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[-.48, .2, 0]} rotation={[0, .2, -.35]}><coneGeometry args={[.62, 1.12, 5]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.22} side={2} /></mesh>
+    <mesh position={[.48, .2, 0]} rotation={[0, -.2, .35]}><coneGeometry args={[.62, 1.12, 5]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.22} side={2} /></mesh>
+    <mesh position={[0, -.75, .04]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[.17, 1.15, 10]} /><meshStandardMaterial color="#241630" /></mesh>
+    <mesh position={[-.13, -.63, .18]}><capsuleGeometry args={[.06, .34, 6, 10]} /><meshStandardMaterial color="#241630" /></mesh>
+    <mesh position={[.13, -.63, .18]}><capsuleGeometry args={[.06, .34, 6, 10]} /><meshStandardMaterial color="#241630" /></mesh>
   </group>
 }
 
 function MoonSpirit({ position }: { position: [number, number, number] }) {
-  return <group position={position} scale={.32}>
-    <Float speed={1.8} floatIntensity={.4}><mesh><sphereGeometry args={[.42, 24, 24]} /><meshStandardMaterial color="#c9cdd8" emissive="#56b4ff" emissiveIntensity={.8} roughness={.45} /></mesh><mesh position={[-.12, .05, .37]}><sphereGeometry args={[.06, 10, 10]} /><meshBasicMaterial color="#24152f" /></mesh><mesh position={[.12, -.1, .37]}><sphereGeometry args={[.08, 10, 10]} /><meshBasicMaterial color="#24152f" /></mesh><pointLight intensity={2} distance={2} color="#56b4ff" /></Float>
+  return <group position={position} scale={.36}>
+    <Float speed={1.8} floatIntensity={.4}>
+      <mesh><sphereGeometry args={[.42, 32, 32]} /><meshPhysicalMaterial color="#c9cdd8" emissive="#56b4ff" emissiveIntensity={.65} roughness={.28} metalness={.1} clearcoat={.8} /></mesh>
+      <mesh scale={.78} position={[0, 0, .28]}><torusGeometry args={[.28, .045, 12, 32, Math.PI * 1.55]} /><meshBasicMaterial color="#ff9dcd" /></mesh>
+      <mesh position={[-.12, .05, .37]}><sphereGeometry args={[.06, 10, 10]} /><meshBasicMaterial color="#24152f" /></mesh>
+      <mesh position={[.12, -.1, .37]}><sphereGeometry args={[.08, 10, 10]} /><meshBasicMaterial color="#24152f" /></mesh>
+      <pointLight intensity={2.5} distance={2.4} color="#56b4ff" />
+    </Float>
   </group>
 }
 
 function LocationMarker({ location, selected, onSelect }: { location: Location; selected: boolean; onSelect: (id: LocationId) => void }) {
   return <group position={location.position} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
     <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.2}>
-      <mesh castShadow>
-        <icosahedronGeometry args={[selected ? 0.32 : 0.25, 2]} />
-        <meshStandardMaterial color={location.color} emissive={location.color} emissiveIntensity={selected ? 1.8 : 0.8} roughness={0.3} metalness={0.35} />
+      <mesh castShadow rotation={[0.4, 0.2, 0.35]}>
+        <octahedronGeometry args={[selected ? 0.34 : 0.26, 2]} />
+        <meshPhysicalMaterial color={location.color} emissive={location.color} emissiveIntensity={selected ? 1.8 : 0.8} roughness={0.18} metalness={0.32} clearcoat={.9} clearcoatRoughness={.12} />
       </mesh>
+      <mesh scale={.5} position={[0, -.22, 0]}><cylinderGeometry args={[.12, .2, .4, 8]} /><meshStandardMaterial color="#c9cdd8" metalness={.72} roughness={.25} /></mesh>
       {selected && <mesh scale={1.55}><ringGeometry args={[0.32, 0.36, 32]} /><meshBasicMaterial color={location.color} transparent opacity={0.55} /></mesh>}
       <Text position={[0, -0.56, 0]} fontSize={0.13} color="#c9cdd8" anchorX="center" anchorY="middle">{location.name}</Text>
       <Html center position={[0, 0.02, 0.05]} distanceFactor={7} style={{ color: '#111118', fontSize: 12, fontWeight: 700, pointerEvents: 'none' }}>{location.icon}</Html>
@@ -208,13 +219,18 @@ function LocationMarker({ location, selected, onSelect }: { location: Location; 
 }
 
 function Companion({ position }: { position: [number, number, number] }) {
-  return <group position={position} scale={0.65}>
-    <mesh position={[0, 0.38, 0]}><sphereGeometry args={[0.27, 24, 24]} /><meshStandardMaterial color="#111118" roughness={0.55} /></mesh>
-    <mesh position={[0, -0.05, 0]}><capsuleGeometry args={[0.22, 0.48, 8, 16]} /><meshStandardMaterial color="#111118" roughness={0.62} /></mesh>
-    <mesh position={[-0.1, 0.63, 0]} rotation={[0, 0, -0.35]}><coneGeometry args={[0.11, 0.34, 4]} /><meshStandardMaterial color="#111118" /></mesh>
-    <mesh position={[0.1, 0.63, 0]} rotation={[0, 0, 0.35]}><coneGeometry args={[0.11, 0.34, 4]} /><meshStandardMaterial color="#111118" /></mesh>
-    <mesh position={[-0.1, 0.42, 0.24]}><sphereGeometry args={[0.035, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
-    <mesh position={[0.1, 0.42, 0.24]}><sphereGeometry args={[0.035, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+  return <group position={position} scale={0.68} rotation={[0, -.2, 0]}>
+    <mesh castShadow position={[0, .08, 0]}><sphereGeometry args={[.31, 32, 24]} /><meshStandardMaterial color="#15131b" roughness={.42} metalness={.18} /></mesh>
+    <mesh castShadow position={[0, .47, .01]}><sphereGeometry args={[.34, 32, 24]} /><meshStandardMaterial color="#211b29" roughness={.38} metalness={.2} /></mesh>
+    <mesh position={[-.15, .76, 0]} rotation={[0, 0, -.32]}><coneGeometry args={[.13, .38, 5]} /><meshStandardMaterial color="#282034" roughness={.4} /></mesh>
+    <mesh position={[.15, .76, 0]} rotation={[0, 0, .32]}><coneGeometry args={[.13, .38, 5]} /><meshStandardMaterial color="#282034" roughness={.4} /></mesh>
+    <mesh position={[-.13, .49, .3]}><sphereGeometry args={[.045, 16, 16]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[.13, .49, .3]}><sphereGeometry args={[.045, 16, 16]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[0, .33, .31]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[.11, .15, 4]} /><meshStandardMaterial color="#9257e3" emissive="#9257e3" emissiveIntensity={.28} /></mesh>
+    <mesh position={[-.28, .05, 0]} rotation={[0, 0, -.55]}><coneGeometry args={[.18, .48, 6]} /><meshStandardMaterial color="#30223e" roughness={.55} /></mesh>
+    <mesh position={[.28, .05, 0]} rotation={[0, 0, .55]}><coneGeometry args={[.18, .48, 6]} /><meshStandardMaterial color="#30223e" roughness={.55} /></mesh>
+    <mesh position={[-.11, -.27, .02]}><capsuleGeometry args={[.06, .25, 6, 10]} /><meshStandardMaterial color="#17131d" /></mesh>
+    <mesh position={[.11, -.27, .02]}><capsuleGeometry args={[.06, .25, 6, 10]} /><meshStandardMaterial color="#17131d" /></mesh>
   </group>
 }
 
