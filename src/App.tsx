@@ -1,7 +1,8 @@
 import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
+import { defaultWorldState, loadWorldState, saveWorldState } from './worldState'
 
 type LocationId = 'library' | 'home' | 'university' | 'love-doctor'
 
@@ -23,13 +24,15 @@ const locations: Location[] = [
 ]
 
 function App() {
+  const [worldState, setWorldState] = useState(loadWorldState)
   const [selectedLocation, setSelectedLocation] = useState<LocationId>('library')
   const [showPeople, setShowPeople] = useState(true)
   const [activeRoom, setActiveRoom] = useState<LocationId | null>(null)
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
+  useEffect(() => { saveWorldState(worldState) }, [worldState])
 
-  if (activeRoom === 'library') return <LibraryRoom onBack={() => setActiveRoom(null)} />
-  if (activeRoom === 'home') return <HomeRoom onBack={() => setActiveRoom(null)} />
+  if (activeRoom === 'library') return <LibraryRoom onBack={() => setActiveRoom(null)} savedIdeas={worldState.savedIdeas} onSaveIdea={(idea) => setWorldState((state) => ({ ...state, savedIdeas: [...state.savedIdeas, idea] }))} />
+  if (activeRoom === 'home') return <HomeRoom onBack={() => setActiveRoom(null)} chores={worldState.chores} onChoresChange={(chores) => setWorldState((state) => ({ ...state, chores }))} />
 
   return (
     <div className="world-app">
@@ -96,9 +99,8 @@ function App() {
   )
 }
 
-function LibraryRoom({ onBack }: { onBack: () => void }) {
+function LibraryRoom({ onBack, savedIdeas, onSaveIdea }: { onBack: () => void; savedIdeas: string[]; onSaveIdea: (idea: string) => void }) {
   const [idea, setIdea] = useState<string | null>(null)
-  const [savedIdeas, setSavedIdeas] = useState<string[]>([])
   const ideas = [
     'Set a 20-minute “tiny prototype” timer and build one beautiful corner of Hearthwise before lunch.',
     'Write three sentences about the person this world is meant to help, then use one as your next design test.',
@@ -123,20 +125,15 @@ function LibraryRoom({ onBack }: { onBack: () => void }) {
     </div>
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>68%</strong><small>weekly tending</small></div><div><strong>12</strong><small>open ideas</small></div><div><strong>3</strong><small>active goals</small></div></div></section>
-    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div>{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { setSavedIdeas((current) => [...current, idea]); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
+    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div>{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { onSaveIdea(idea); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
     <div className="room-note"><span className="owl-glyph">◉</span><div><strong>Owl says</strong><p>{savedIdeas.length ? `${savedIdeas.length} idea${savedIdeas.length === 1 ? '' : 's'} tucked onto your shelf.` : '“A good idea is often just a question you have not asked yet.”'}</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> SELECT A SHELF TO EXPLORE</div>
   </div>
 }
 
-function HomeRoom({ onBack }: { onBack: () => void }) {
-  const [chores, setChores] = useState([
-    { label: 'Start the evening dishes', detail: 'Kitchen · 15 minutes', done: false },
-    { label: 'Check tomorrow’s family calendar', detail: 'Planning · 5 minutes', done: true },
-    { label: 'Put the laundry away', detail: 'Household · 10 minutes', done: false },
-  ])
+function HomeRoom({ onBack, chores, onChoresChange }: { onBack: () => void; chores: typeof defaultWorldState.chores; onChoresChange: (chores: typeof defaultWorldState.chores) => void }) {
   const completed = chores.filter((chore) => chore.done).length
-  const toggleChore = (index: number) => setChores((current) => current.map((chore, choreIndex) => choreIndex === index ? { ...chore, done: !chore.done } : chore))
+  const toggleChore = (index: number) => onChoresChange(chores.map((chore, choreIndex) => choreIndex === index ? { ...chore, done: !chore.done } : chore))
 
   return <div className="room-app home-room">
     <div className="room-canvas">
