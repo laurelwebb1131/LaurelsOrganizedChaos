@@ -8,6 +8,8 @@
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "server": "tsx server/index.ts",
+    "server:check": "tsx --eval \"import { handleHealth } from './server/companion.ts'; console.log(typeof handleHealth)\"",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
@@ -26,6 +28,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.5",
     "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/three": "^0.171.0"
