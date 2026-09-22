@@ -17,7 +17,18 @@ npm run build
 
 ## Prototype scope
 
-The current prototype is the first world-building slice. It includes a navigable 3D planet, selectable locations for Personal goals, Family + everyday life, Education goals, and Relationship goals, plus a selected-realm panel and a toggleable life companion. Data is still mock data; the next layer will turn each location into a real room with goals, habits, people, and AI interactions.
+The current prototype includes a navigable 3D planet and four selectable locations:
+
+- **The Library** for personal goals, ideas, saved prompts, and Juniper chat.
+- **Hearth House** for family responsibilities and daily habits.
+- **The University** for education goals and focused study sessions.
+- **The Love Doctor** for consent-aware relationship practices and connection goals.
+
+World state is versioned and persisted locally. Goals, habits, chores, saved ideas, companions, room/realm hashes, and companion context are available to the local AI seam. The provider remains optional and falls back to deterministic local replies until a server-side API key is configured.
+
+## AI provider
+
+Copy `.env.example` to the server environment and set the three `OPENAI_COMPATIBLE_*` values. Never expose the API key through a `VITE_*` variable. The development Vite middleware implements the documented `/api/companion` contract in `docs/companion-api.md`.
 
 ## Stack
 

@@ -70,6 +70,8 @@ function App() {
 
   if (activeRoom === 'library') return <LibraryRoom onBack={leaveRoom} savedIdeas={worldState.savedIdeas} companions={worldState.companions} goals={worldState.goals} habits={worldState.habits} onSaveIdea={(idea) => setWorldState((state) => ({ ...state, savedIdeas: [...state.savedIdeas, idea] }))} />
   if (activeRoom === 'home') return <HomeRoom onBack={leaveRoom} chores={worldState.chores} companions={worldState.companions} goals={worldState.goals} habits={worldState.habits} onChoresChange={(chores) => setWorldState((state) => ({ ...state, chores }))} />
+  if (activeRoom === 'university') return <UniversityRoom onBack={leaveRoom} companions={worldState.companions} goals={worldState.goals} habits={worldState.habits} />
+  if (activeRoom === 'love-doctor') return <LoveDoctorRoom onBack={leaveRoom} companions={worldState.companions} goals={worldState.goals} habits={worldState.habits} />
 
   return (
     <div className="world-app">
@@ -134,7 +136,7 @@ function App() {
         <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
         <p>{active.description}</p>
         <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
-        <button className="enter-button" onClick={() => (active.id === 'home' || active.id === 'library') && enterRoom(active.id)}>Enter {active.name} <span>↗</span></button>
+        <button className="enter-button" onClick={() => (active.id === 'home' || active.id === 'library' || active.id === 'university' || active.id === 'love-doctor') && enterRoom(active.id)}>Enter {active.name} <span>↗</span></button>
         <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
       </section>
 
@@ -226,6 +228,38 @@ function HomeRoom({ onBack, chores, companions, goals, habits, onChoresChange }:
   </div>
 }
 
+function UniversityRoom({ onBack, companions, goals, habits }: { onBack: () => void; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits }) {
+  const learningGoal = goals.find((goal) => goal.realm === 'The University')
+  const studyHabit = habits.find((habit) => habit.realm === 'The University')
+  const guide = companions.find((companion) => companion.realm === 'The University' || companion.realm === 'All realms')
+  const [sessionStarted, setSessionStarted] = useState(false)
+  return <div className="room-app university-room">
+    <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.2, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#090b14']} /><fog attach="fog" args={['#090b14', 7, 13]} /><ambientLight intensity={1.5} color="#c5c0e5" /><directionalLight castShadow position={[3, 6, 4]} intensity={4} color="#e9f3ff" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={15} distance={8} color="#9257e3" /><pointLight position={[3, 2, 3]} intensity={10} distance={7} color="#56b4ff" /><Stars radius={70} depth={30} count={950} factor={1.8} fade speed={.2} /><UniversityScene /><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#030509" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE UNIVERSITY</strong></div><button className="room-profile">LW</button></header>
+    <section className="room-intro"><div className="copy-kicker university-kicker"><span>◇</span> EDUCATION GOALS</div><h1>The<br /><em>University</em></h1><p>A place for curiosity, practice, and the skills you want to carry forward.</p><div className="room-progress"><div><strong>{learningGoal?.progress ?? 50}%</strong><small>course progress</small></div><div><strong>{studyHabit?.completedToday ? '1' : '0'}</strong><small>session today</small></div><div><strong>4</strong><small>lessons left</small></div></div></section>
+    <section className="goal-panel university-panel"><div className="panel-topline"><span className="panel-label">CURRENT STUDY PLAN</span><span className="home-weather">✦ FOCUS MODE</span></div><div className="study-card"><div className="study-orb">◇</div><div><strong>Learn 3D design</strong><small>{learningGoal?.nextStep ?? 'Complete one focused practice session.'}</small></div><b>{learningGoal?.progress ?? 50}%</b></div><div className="study-track"><i style={{ width: `${learningGoal?.progress ?? 50}%` }} /></div><button className={`enter-button study-button ${sessionStarted ? 'session-active' : ''}`} onClick={() => setSessionStarted((current) => !current)}>{sessionStarted ? 'Study session in progress' : 'Start a 25-minute session'} <span>{sessionStarted ? '◉' : '↗'}</span></button><div className="study-note"><span>✧</span><p>{sessionStarted ? 'Your next step is small enough to begin. Keep going.' : 'A short session counts. You are building a path, not proving a point.'}</p></div></section>
+    <CompanionChat companion={guide} realm="The University" prompt="Help me choose what to study first" goals={goals} habits={habits} />
+    <div className="room-note"><span className="owl-glyph university-owl">◇</span><div><strong>{guide?.name ?? 'The Owl'} · learning guide</strong><p>“{guide?.context ?? 'Curiosity is a direction. Let’s take one step.'}”</p></div></div>
+    <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> START A SESSION TO MARK MOMENTUM</div>
+  </div>
+}
+
+function LoveDoctorRoom({ onBack, companions, goals, habits }: { onBack: () => void; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits }) {
+  const guide = companions.find((companion) => companion.realm === 'The Love Doctor' || companion.realm === 'All realms')
+  const relationshipGoal = goals.find((goal) => goal.realm === 'The Love Doctor')
+  const [selectedPractice, setSelectedPractice] = useState('A clear, kind check-in')
+  const practices = ['A clear, kind check-in', 'Name one thing you appreciate', 'Make space for an honest question']
+  return <div className="room-app love-room">
+    <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#110910']} /><fog attach="fog" args={['#110910', 7, 13]} /><ambientLight intensity={1.5} color="#f4c8df" /><directionalLight castShadow position={[3, 6, 4]} intensity={3.6} color="#fff1fb" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={16} distance={8} color="#ff3d9b" /><pointLight position={[3, 2, 3]} intensity={8} distance={7} color="#9257e3" /><Stars radius={70} depth={30} count={850} factor={1.6} fade speed={.2} /><LoveScene /><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#080308" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LOVE DOCTOR</strong></div><button className="room-profile">LW</button></header>
+    <section className="room-intro"><div className="copy-kicker love-kicker"><span>♡</span> RELATIONSHIP GOALS</div><h1>The<br /><em>Love Doctor</em></h1><p>A gentle room for connection, communication, and care that respects everyone's agency.</p><div className="room-progress"><div><strong>{relationshipGoal?.progress ?? 0}%</strong><small>goal progress</small></div><div><strong>2</strong><small>open reflections</small></div><div><strong>1</strong><small>practice today</small></div></div></section>
+    <section className="goal-panel love-panel"><div className="panel-topline"><span className="panel-label">CHOOSE A PRACTICE</span><span className="home-weather">♡ CONSENT FIRST</span></div><p className="love-copy">Small practices for connection. Choose only what feels welcome for everyone involved.</p>{practices.map((practice) => <button key={practice} className={`practice-option ${selectedPractice === practice ? 'selected' : ''}`} onClick={() => setSelectedPractice(practice)}><span>{selectedPractice === practice ? '✓' : '○'}</span>{practice}</button>)}<button className="enter-button love-button" onClick={() => window.alert(`Practice chosen: ${selectedPractice}`)}>Keep this practice <span>↗</span></button></section>
+    <CompanionChat companion={guide} realm="The Love Doctor" prompt="Help me prepare for a caring conversation" goals={goals} habits={habits} />
+    <div className="room-note"><span className="owl-glyph love-owl">♡</span><div><strong>{guide?.name ?? 'The Love Doctor'} · connection guide</strong><p>“{guide?.context ?? 'Connection grows where honesty and consent can sit together.'}”</p></div></div>
+    <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> CHOOSE A PRACTICE THAT FEELS WELCOME</div>
+  </div>
+}
+
 function CompanionChat({ companion, realm, prompt, goals, habits }: { companion?: Companion; realm: string; prompt: string; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('')
@@ -285,6 +319,32 @@ function HouseScene() {
     <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[2.2, -1.05, .85]} scale={.3} />
     <mesh position={[-2.2, .85, -.8]}><sphereGeometry args={[.34, 24, 24]} /><meshStandardMaterial color="#56b4ff" emissive="#56b4ff" emissiveIntensity={.45} roughness={.28} /></mesh>
     <mesh position={[-2.2, .85, -.42]}><sphereGeometry args={[.06, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+  </group>
+}
+
+function UniversityScene() {
+  return <group>
+    <mesh position={[0, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 16]} /><meshStandardMaterial color="#0d1220" roughness={.95} /></mesh>
+    <mesh position={[0, .5, -1.2]}><boxGeometry args={[5.4, 3.7, .35]} /><meshStandardMaterial color="#171735" roughness={.8} /></mesh>
+    <mesh position={[0, 2.5, -1.2]} rotation={[0, 0, Math.PI / 4]}><boxGeometry args={[3.6, 3.6, .36]} /><meshStandardMaterial color="#252060" roughness={.75} /></mesh>
+    <mesh position={[0, .1, .65]}><cylinderGeometry args={[1.25, 1.25, .16, 48]} /><meshStandardMaterial color="#261d47" roughness={.55} metalness={.2} /></mesh>
+    <mesh position={[0, .28, .65]}><torusGeometry args={[.88, .035, 12, 48]} /><meshBasicMaterial color="#56b4ff" /></mesh>
+    <mesh position={[0, .5, .65]}><icosahedronGeometry args={[.36, 2]} /><meshStandardMaterial color="#9257e3" emissive="#9257e3" emissiveIntensity={.8} roughness={.2} metalness={.32} /></mesh>
+    <ImportedAsset path="/assets/cc0/nature/bench.glb" position={[-1.7, -1.1, .7]} scale={.42} />
+    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[1.8, -1.05, .8]} scale={.3} />
+  </group>
+}
+
+function LoveScene() {
+  return <group>
+    <mesh position={[0, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 16]} /><meshStandardMaterial color="#180d19" roughness={.94} /></mesh>
+    <mesh position={[0, .55, -1.2]}><boxGeometry args={[5.4, 3.8, .35]} /><meshStandardMaterial color="#32152e" roughness={.8} /></mesh>
+    <mesh position={[0, 2.6, -1.2]} rotation={[0, 0, Math.PI / 4]}><boxGeometry args={[3.7, 3.7, .36]} /><meshStandardMaterial color="#4a1d43" roughness={.7} /></mesh>
+    <mesh position={[-1.35, -.18, .6]}><sphereGeometry args={[.82, 32, 24]} /><meshStandardMaterial color="#63305b" roughness={.7} /></mesh>
+    <mesh position={[1.35, -.18, .6]}><sphereGeometry args={[.82, 32, 24]} /><meshStandardMaterial color="#63305b" roughness={.7} /></mesh>
+    <mesh position={[0, .7, .7]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[.8, .06, 16, 48]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[0, .7, .7]}><sphereGeometry args={[.34, 24, 24]} /><meshStandardMaterial color="#ff9dcd" emissive="#ff3d9b" emissiveIntensity={.35} roughness={.28} /></mesh>
+    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[-2.1, -1.05, .9]} scale={.28} />
   </group>
 }
 
