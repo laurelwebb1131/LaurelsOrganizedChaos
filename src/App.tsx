@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { Float, Html, OrbitControls, Stars, Text } from '@react-three/drei'
+import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text } from '@react-three/drei'
 import { useState } from 'react'
 import './styles.css'
 
@@ -33,15 +33,17 @@ function App() {
   return (
     <div className="world-app">
       <div className="world-canvas">
-        <Canvas camera={{ position: [0, 0.5, 8.8], fov: 38 }} dpr={[1, 2]}>
+        <Canvas shadows camera={{ position: [0, 0.5, 8.8], fov: 38 }} dpr={[1, 2]} gl={{ antialias: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.toneMappingExposure = 1.18 }}>
           <color attach="background" args={['#08080b']} />
           <fog attach="fog" args={['#08080b', 8, 15]} />
-          <ambientLight intensity={1.2} color="#b9b0cb" />
-          <directionalLight position={[4, 6, 5]} intensity={4.2} color="#fff1fb" />
-          <pointLight position={[-4, 2, 4]} intensity={12} distance={9} color="#ff3d9b" />
-          <pointLight position={[4, -3, 2]} intensity={8} distance={8} color="#56b4ff" />
+          <ambientLight intensity={1.25} color="#b9b0cb" />
+          <directionalLight castShadow position={[4, 6, 5]} intensity={4.8} color="#fff1fb" shadow-mapSize={[2048, 2048]} />
+          <pointLight position={[-4, 2, 4]} intensity={16} distance={9} color="#ff3d9b" />
+          <pointLight position={[4, -3, 2]} intensity={11} distance={8} color="#56b4ff" />
           <Stars radius={80} depth={35} count={1800} factor={2.1} saturation={0.5} fade speed={0.4} />
+          <Sparkles count={90} scale={[8, 6, 8]} size={1.7} speed={0.2} color="#ff9dcd" opacity={0.32} />
           <PlanetWorld selectedLocation={selectedLocation} onSelect={setSelectedLocation} showPeople={showPeople} />
+          <ContactShadows position={[0, -2.95, 0]} opacity={0.35} scale={8} blur={2.8} far={4.5} color="#10071a" />
           <OrbitControls enablePan={false} minDistance={6.3} maxDistance={11} minPolarAngle={Math.PI / 3.4} maxPolarAngle={Math.PI / 1.7} autoRotate autoRotateSpeed={0.18} />
         </Canvas>
       </div>
@@ -93,11 +95,13 @@ function LibraryRoom({ onBack }: { onBack: () => void }) {
       <Canvas camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}>
         <color attach="background" args={['#0b0810']} />
         <fog attach="fog" args={['#0b0810', 7, 13]} />
-        <ambientLight intensity={1.5} color="#bfb3d1" />
-        <pointLight position={[0, 4, 3]} intensity={14} distance={10} color="#ff3d9b" />
-        <pointLight position={[-4, 2, 1]} intensity={10} distance={7} color="#9257e3" />
+        <ambientLight intensity={1.6} color="#bfb3d1" />
+        <directionalLight castShadow position={[3, 6, 4]} intensity={3.5} color="#fff1fb" shadow-mapSize={[2048, 2048]} />
+        <pointLight position={[0, 4, 3]} intensity={18} distance={10} color="#ff3d9b" />
+        <pointLight position={[-4, 2, 1]} intensity={13} distance={7} color="#9257e3" />
         <Stars radius={70} depth={30} count={900} factor={1.8} fade speed={0.25} />
         <LibraryScene />
+        <ContactShadows position={[0, -1.3, 0]} opacity={0.5} scale={8} blur={2.4} far={4} color="#050308" />
         <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
       </Canvas>
     </div>
@@ -126,7 +130,7 @@ function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocat
     <Float speed={0.7} rotationIntensity={0.08} floatIntensity={0.16}>
       <mesh rotation={[0.15, -0.25, 0.1]}>
         <sphereGeometry args={[2.55, 96, 96]} />
-        <meshStandardMaterial color="#174b70" roughness={0.86} metalness={0.08} />
+        <meshStandardMaterial color="#164d72" roughness={0.72} metalness={0.12} />
       </mesh>
       <mesh scale={1.012} rotation={[0.15, -0.25, 0.1]}>
         <sphereGeometry args={[2.55, 64, 64]} />
@@ -134,7 +138,7 @@ function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocat
       </mesh>
       <mesh scale={1.025} rotation={[0.15, -0.25, 0.1]}>
         <sphereGeometry args={[2.55, 64, 64]} />
-        <meshStandardMaterial color="#8cd3ff" transparent opacity={0.08} roughness={0.2} metalness={0.1} />
+        <meshPhysicalMaterial color="#9fdcff" transparent opacity={0.1} roughness={0.16} metalness={0.12} transmission={0.05} clearcoat={0.7} clearcoatRoughness={0.2} />
       </mesh>
       <EarthLand />
       <CloudBands />
@@ -159,7 +163,7 @@ function EarthLand() {
   ]
   return <group rotation={[0.15, -0.25, 0.1]}>{landforms.map(([x, y, z, sx, sy, sz], index) => <mesh key={index} position={[x, y, z]} scale={[sx, sy, sz]} rotation={[0.1 * index, 0.18 * index, 0.2]}>
     <sphereGeometry args={[1, 24, 16]} />
-    <meshStandardMaterial color={index % 3 === 0 ? '#567f55' : '#3f714f'} roughness={1} />
+    <meshStandardMaterial color={index % 3 === 0 ? '#56845a' : '#3e7650'} roughness={0.92} metalness={0.03} />
   </mesh>)}</group>
 }
 
@@ -174,7 +178,7 @@ function CloudBands() {
 
 function MythicDragon({ position }: { position: [number, number, number] }) {
   return <group position={position} scale={.45} rotation={[0.1, -0.4, 0.18]}>
-    <mesh><capsuleGeometry args={[.17, .95, 8, 16]} /><meshStandardMaterial color="#2a1839" emissive="#9257e3" emissiveIntensity={.45} /></mesh>
+    <mesh castShadow><capsuleGeometry args={[.17, .95, 8, 16]} /><meshStandardMaterial color="#2a1839" emissive="#9257e3" emissiveIntensity={.45} roughness={.46} metalness={.18} /></mesh>
     <mesh position={[0, .54, .02]}><sphereGeometry args={[.23, 18, 18]} /><meshStandardMaterial color="#2a1839" roughness={.5} /></mesh>
     <mesh position={[-.28, .1, 0]} rotation={[0, .2, -.35]}><coneGeometry args={[.5, .9, 3]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.3} /></mesh>
     <mesh position={[.28, .1, 0]} rotation={[0, -.2, .35]}><coneGeometry args={[.5, .9, 3]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.3} /></mesh>
@@ -192,7 +196,7 @@ function MoonSpirit({ position }: { position: [number, number, number] }) {
 function LocationMarker({ location, selected, onSelect }: { location: Location; selected: boolean; onSelect: (id: LocationId) => void }) {
   return <group position={location.position} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
     <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.2}>
-      <mesh>
+      <mesh castShadow>
         <icosahedronGeometry args={[selected ? 0.32 : 0.25, 2]} />
         <meshStandardMaterial color={location.color} emissive={location.color} emissiveIntensity={selected ? 1.8 : 0.8} roughness={0.3} metalness={0.35} />
       </mesh>

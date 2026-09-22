@@ -2,7 +2,7 @@
 
 ## Direction
 
-**Playful Spooky Familiar** is a high-detail, friendly-gothic visual world for a 3D life operating system. Hearthwise should feel like stepping onto an Earth-like mythic planet: recognizable oceans and continents under moonlight, but with gods, spirits, dragons, and folklore creatures living alongside everyday life.
+**Playful Spooky Familiar** is a high-detail, friendly-gothic visual world for a 3D life operating system. Hearthwise should feel like stepping into a high-end stylized RPG: an Earth-like mythic planet with cinematic lighting, tactile materials, expressive characters, recognizable oceans and continents, and gods, spirits, dragons, and folklore creatures living alongside everyday life.
 
 The interface is not a generic productivity dashboard, a Halloween theme, or a dark-mode SaaS template. It is a personal world where a crow, owl, bat, moon, dragon, and divine beings act as a living visual language for attention, wisdom, motion, rest, courage, and mystery. Locations are the primary information architecture: the user visits a place to work on a part of life.
 
@@ -59,6 +59,8 @@ The illustration system should have visible craft: layered feather and fur shape
 - The planet is the home screen and the user's life map.
 - The planet must read as Earth-like before the magic layer appears: blue oceans, green land, cloud veil, atmosphere, and a believable globe silhouette.
 - Magic is part of the world, not a filter: mythic creatures, spirits, gods, and sacred landmarks have distinct roles and locations.
+- Rendering should feel like a premium game world: smooth silhouettes, controlled specular highlights, soft contact shadows, atmospheric falloff, cinematic color grading, and deliberate scale.
+- Characters should use layered forms and expressive poses rather than placeholder primitives; procedural geometry is acceptable for the prototype only when it preserves the intended silhouette and material feel.
 - Locations are meaningful, selectable destinations rather than decorative points.
 - The camera supports orbit and zoom but never loses the planet or its orientation.
 - The current location is always explained in plain language outside the canvas.
