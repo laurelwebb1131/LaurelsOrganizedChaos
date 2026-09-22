@@ -1,0 +1,63 @@
+{
+  "policy": "Only assets with a documented open license are bundled.",
+  "registry": "https://github.com/ToxSam/open-source-3D-assets",
+  "registryLicense": "CC0 1.0 Universal",
+  "assets": [
+    {
+      "file": "assets/creatures/cc0-spider.glb",
+      "name": "Quaternius CC0 Spider",
+      "license": "CC0 1.0 Universal",
+      "creator": "Quaternius",
+      "source": "https://quaternius.com/",
+      "mirror": "https://github.com/igibx/Glb-files/blob/main/quaternius_cc0-spider-1368.glb"
+    },
+    {
+      "file": "assets/cc0/creatures/triangulon.glb",
+      "name": "Triangulon",
+      "license": "CC0 1.0 Universal",
+      "creator": "Polygonal Mind",
+      "collection": "XYZ",
+      "source": "https://github.com/ToxSam/cc0-models-Polygonal-Mind/blob/main/projects/xyz/001_Triangulon_Art.glb"
+    },
+    {
+      "file": "assets/cc0/creatures/hexabear.glb",
+      "name": "Hexabear",
+      "license": "CC0 1.0 Universal",
+      "creator": "Polygonal Mind",
+      "collection": "XYZ",
+      "source": "https://github.com/ToxSam/cc0-models-Polygonal-Mind/blob/main/projects/xyz/003_Hexabear_Art.glb"
+    },
+    {
+      "file": "assets/cc0/creatures/whormbus.glb",
+      "name": "Whormbus",
+      "license": "CC0 1.0 Universal",
+      "creator": "Polygonal Mind",
+      "collection": "XYZ",
+      "source": "https://github.com/ToxSam/cc0-models-Polygonal-Mind/blob/main/projects/xyz/006_Whormbus_Art.glb"
+    },
+    {
+      "file": "assets/cc0/environment/crystal-cluster.glb",
+      "name": "Crystal Cluster",
+      "license": "CC0 1.0 Universal",
+      "creator": "Polygonal Mind",
+      "collection": "Crystal Crossroads",
+      "source": "https://github.com/ToxSam/cc0-models-Polygonal-Mind/blob/main/projects/crystal-crossroads/Crystal_Cluster.glb"
+    },
+    {
+      "file": "assets/cc0/nature/deer.glb",
+      "name": "Deer Armature",
+      "license": "CC0 1.0 Universal",
+      "creator": "Polygonal Mind",
+      "collection": "MomusPark",
+      "source": "https://github.com/ToxSam/cc0-models-Polygonal-Mind/blob/main/projects/MomusPark/DeerArmature.glb"
+    },
+    {
+      "file": "assets/cc0/nature/bench.glb",
+      "name": "Bench",
+      "license": "CC0 1.0 Universal",
+      "creator": "Polygonal Mind",
+      "collection": "MomusPark",
+      "source": "https://github.com/ToxSam/cc0-models-Polygonal-Mind/blob/main/projects/MomusPark/Bench_01_Art.glb"
+    }
+  ]
+}

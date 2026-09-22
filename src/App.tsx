@@ -45,6 +45,9 @@ function App() {
           <Suspense fallback={null}>
             <PlanetWorld selectedLocation={selectedLocation} onSelect={setSelectedLocation} showPeople={showPeople} />
             <ImportedCreature position={[-3.1, -1.55, 1.1]} />
+            <ImportedAsset path="/assets/cc0/creatures/triangulon.glb" position={[3.1, -1.3, 1.2]} scale={0.22} />
+            <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[0, -2.4, 2.4]} scale={0.35} />
+            <ImportedAsset path="/assets/cc0/nature/deer.glb" position={[2.6, 1.7, -0.8]} scale={0.24} />
             <ContactShadows position={[0, -2.95, 0]} opacity={0.35} scale={8} blur={2.8} far={4.5} color="#10071a" />
           </Suspense>
           <OrbitControls enablePan={false} minDistance={6.3} maxDistance={11} minPolarAngle={Math.PI / 3.4} maxPolarAngle={Math.PI / 1.7} autoRotate autoRotateSpeed={0.18} />
@@ -211,7 +214,15 @@ function ImportedCreature({ position }: { position: [number, number, number] }) 
   return <primitive object={scene.clone()} position={position} scale={0.28} rotation={[0, 0.6, 0]} />
 }
 
+function ImportedAsset({ path, position, scale }: { path: string; position: [number, number, number]; scale: number }) {
+  const { scene } = useGLTF(path)
+  return <primitive object={scene.clone()} position={position} scale={scale} />
+}
+
 useGLTF.preload('/assets/creatures/cc0-spider.glb')
+useGLTF.preload('/assets/cc0/creatures/triangulon.glb')
+useGLTF.preload('/assets/cc0/environment/crystal-cluster.glb')
+useGLTF.preload('/assets/cc0/nature/deer.glb')
 
 function LocationMarker({ location, selected, onSelect }: { location: Location; selected: boolean; onSelect: (id: LocationId) => void }) {
   return <group position={location.position} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
