@@ -13,11 +13,19 @@ export type CompanionReply = {
 }
 
 export async function requestCompanionReply(context: CompanionContext): Promise<string> {
-  const response = await fetch('/api/companion', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(context),
-  })
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 12000)
+  let response: Response
+  try {
+    response = await fetch('/api/companion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(context),
+      signal: controller.signal,
+    })
+  } finally {
+    window.clearTimeout(timeout)
+  }
 
   if (!response.ok) throw new Error(`Companion service returned ${response.status}`)
   const data = (await response.json()) as CompanionReply

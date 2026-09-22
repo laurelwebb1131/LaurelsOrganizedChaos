@@ -97,6 +97,15 @@ function sendJson(response: import('node:http').ServerResponse, body: object) {
 
 export default defineConfig({
   plugins: [react(), companionApi()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three', '@react-three/fiber', '@react-three/drei'],
+        },
+      },
+    },
+  },
   server: {
     watch: {
       ignored: ['**/*.glb', '**/*.gltf', '**/*.bin', '**/textures/**'],

@@ -85,7 +85,7 @@ function App() {
           <pointLight position={[4, -3, 2]} intensity={11} distance={8} color="#56b4ff" />
           <Stars radius={80} depth={35} count={1800} factor={2.1} saturation={0.5} fade speed={0.4} />
           <Sparkles count={90} scale={[8, 6, 8]} size={1.7} speed={0.2} color="#ff9dcd" opacity={0.32} />
-          <Suspense fallback={null}>
+          <Suspense fallback={<SceneLoading label="Loading your world..." />}>
             <PlanetWorld selectedLocation={selectedLocation} onSelect={selectLocation} showPeople={showPeople} />
             <ImportedCreature position={[-3.1, -1.55, 1.1]} />
             <ImportedAsset path="/assets/cc0/creatures/triangulon.glb" position={[3.1, -1.3, 1.2]} scale={0.22} />
@@ -186,7 +186,7 @@ function LibraryRoom({ onBack, savedIdeas, companions, goals, habits, onSaveIdea
         <pointLight position={[0, 4, 3]} intensity={18} distance={10} color="#ff3d9b" />
         <pointLight position={[-4, 2, 1]} intensity={13} distance={7} color="#9257e3" />
         <Stars radius={70} depth={30} count={900} factor={1.8} fade speed={0.25} />
-        <LibraryScene />
+        <Suspense fallback={<SceneLoading label="Opening the Library..." />}><LibraryScene /></Suspense>
         <ContactShadows position={[0, -1.3, 0]} opacity={0.5} scale={8} blur={2.4} far={4} color="#050308" />
         <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
       </Canvas>
@@ -214,7 +214,7 @@ function HomeRoom({ onBack, chores, companions, goals, habits, onChoresChange }:
         <pointLight position={[-3, 3, 2]} intensity={14} distance={8} color="#56b4ff" />
         <pointLight position={[3, 2, 3]} intensity={10} distance={7} color="#ff9dcd" />
         <Stars radius={70} depth={30} count={850} factor={1.6} fade speed={0.2} />
-        <HouseScene />
+        <Suspense fallback={<SceneLoading label="Opening Hearth House..." />}><HouseScene /></Suspense>
         <ContactShadows position={[0, -1.35, 0]} opacity={0.5} scale={8} blur={2.4} far={4} color="#030509" />
         <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
       </Canvas>
@@ -234,7 +234,7 @@ function UniversityRoom({ onBack, companions, goals, habits }: { onBack: () => v
   const guide = companions.find((companion) => companion.realm === 'The University' || companion.realm === 'All realms')
   const [sessionStarted, setSessionStarted] = useState(false)
   return <div className="room-app university-room">
-    <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.2, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#090b14']} /><fog attach="fog" args={['#090b14', 7, 13]} /><ambientLight intensity={1.5} color="#c5c0e5" /><directionalLight castShadow position={[3, 6, 4]} intensity={4} color="#e9f3ff" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={15} distance={8} color="#9257e3" /><pointLight position={[3, 2, 3]} intensity={10} distance={7} color="#56b4ff" /><Stars radius={70} depth={30} count={950} factor={1.8} fade speed={.2} /><UniversityScene /><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#030509" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
+    <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.2, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#090b14']} /><fog attach="fog" args={['#090b14', 7, 13]} /><ambientLight intensity={1.5} color="#c5c0e5" /><directionalLight castShadow position={[3, 6, 4]} intensity={4} color="#e9f3ff" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={15} distance={8} color="#9257e3" /><pointLight position={[3, 2, 3]} intensity={10} distance={7} color="#56b4ff" /><Stars radius={70} depth={30} count={950} factor={1.8} fade speed={.2} /><Suspense fallback={<SceneLoading label="Opening The University..." />}><UniversityScene /></Suspense><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#030509" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE UNIVERSITY</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker university-kicker"><span>◇</span> EDUCATION GOALS</div><h1>The<br /><em>University</em></h1><p>A place for curiosity, practice, and the skills you want to carry forward.</p><div className="room-progress"><div><strong>{learningGoal?.progress ?? 50}%</strong><small>course progress</small></div><div><strong>{studyHabit?.completedToday ? '1' : '0'}</strong><small>session today</small></div><div><strong>4</strong><small>lessons left</small></div></div></section>
     <section className="goal-panel university-panel"><div className="panel-topline"><span className="panel-label">CURRENT STUDY PLAN</span><span className="home-weather">✦ FOCUS MODE</span></div><div className="study-card"><div className="study-orb">◇</div><div><strong>Learn 3D design</strong><small>{learningGoal?.nextStep ?? 'Complete one focused practice session.'}</small></div><b>{learningGoal?.progress ?? 50}%</b></div><div className="study-track"><i style={{ width: `${learningGoal?.progress ?? 50}%` }} /></div><button className={`enter-button study-button ${sessionStarted ? 'session-active' : ''}`} onClick={() => setSessionStarted((current) => !current)}>{sessionStarted ? 'Study session in progress' : 'Start a 25-minute session'} <span>{sessionStarted ? '◉' : '↗'}</span></button><div className="study-note"><span>✧</span><p>{sessionStarted ? 'Your next step is small enough to begin. Keep going.' : 'A short session counts. You are building a path, not proving a point.'}</p></div></section>
@@ -250,7 +250,7 @@ function LoveDoctorRoom({ onBack, companions, goals, habits }: { onBack: () => v
   const [selectedPractice, setSelectedPractice] = useState('A clear, kind check-in')
   const practices = ['A clear, kind check-in', 'Name one thing you appreciate', 'Make space for an honest question']
   return <div className="room-app love-room">
-    <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#110910']} /><fog attach="fog" args={['#110910', 7, 13]} /><ambientLight intensity={1.5} color="#f4c8df" /><directionalLight castShadow position={[3, 6, 4]} intensity={3.6} color="#fff1fb" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={16} distance={8} color="#ff3d9b" /><pointLight position={[3, 2, 3]} intensity={8} distance={7} color="#9257e3" /><Stars radius={70} depth={30} count={850} factor={1.6} fade speed={.2} /><LoveScene /><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#080308" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
+    <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#110910']} /><fog attach="fog" args={['#110910', 7, 13]} /><ambientLight intensity={1.5} color="#f4c8df" /><directionalLight castShadow position={[3, 6, 4]} intensity={3.6} color="#fff1fb" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={16} distance={8} color="#ff3d9b" /><pointLight position={[3, 2, 3]} intensity={8} distance={7} color="#9257e3" /><Stars radius={70} depth={30} count={850} factor={1.6} fade speed={.2} /><Suspense fallback={<SceneLoading label="Opening The Love Doctor..." />}><LoveScene /></Suspense><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#080308" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LOVE DOCTOR</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker love-kicker"><span>♡</span> RELATIONSHIP GOALS</div><h1>The<br /><em>Love Doctor</em></h1><p>A gentle room for connection, communication, and care that respects everyone's agency.</p><div className="room-progress"><div><strong>{relationshipGoal?.progress ?? 0}%</strong><small>goal progress</small></div><div><strong>2</strong><small>open reflections</small></div><div><strong>1</strong><small>practice today</small></div></div></section>
     <section className="goal-panel love-panel"><div className="panel-topline"><span className="panel-label">CHOOSE A PRACTICE</span><span className="home-weather">♡ CONSENT FIRST</span></div><p className="love-copy">Small practices for connection. Choose only what feels welcome for everyone involved.</p>{practices.map((practice) => <button key={practice} className={`practice-option ${selectedPractice === practice ? 'selected' : ''}`} onClick={() => setSelectedPractice(practice)}><span>{selectedPractice === practice ? '✓' : '○'}</span>{practice}</button>)}<button className="enter-button love-button" onClick={() => window.alert(`Practice chosen: ${selectedPractice}`)}>Keep this practice <span>↗</span></button></section>
@@ -434,6 +434,10 @@ function ImportedCreature({ position }: { position: [number, number, number] }) 
 function ImportedAsset({ path, position, scale }: { path: string; position: [number, number, number]; scale: number }) {
   const { scene } = useGLTF(path)
   return <primitive object={scene.clone()} position={position} scale={scale} />
+}
+
+function SceneLoading({ label }: { label: string }) {
+  return <Html center><div className="scene-loading"><span className="loading-orb">✦</span><strong>{label}</strong><small>Gathering the starlight</small></div></Html>
 }
 
 useGLTF.preload('/assets/creatures/cc0-spider.glb')
