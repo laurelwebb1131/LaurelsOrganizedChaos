@@ -149,6 +149,7 @@ function LibraryRoom({ onBack, savedIdeas, companions, onSaveIdea }: { onBack: (
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>68%</strong><small>weekly tending</small></div><div><strong>12</strong><small>open ideas</small></div><div><strong>3</strong><small>active goals</small></div></div></section>
     <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div>{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { onSaveIdea(idea); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
+    <CompanionChat companion={guide} realm="The Library" prompt="Help me choose my next idea" />
     <div className="room-note"><span className="owl-glyph">◉</span><div><strong>{guide?.name ?? 'Owl'} · {guide?.role ?? 'Library guide'}</strong><p>{savedIdeas.length ? `${savedIdeas.length} idea${savedIdeas.length === 1 ? '' : 's'} tucked onto your shelf.` : `“${guide?.context ?? 'A good idea is often just a question you have not asked yet.'}”`}</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> SELECT A SHELF TO EXPLORE</div>
   </div>
@@ -176,8 +177,29 @@ function HomeRoom({ onBack, chores, companions, onChoresChange }: { onBack: () =
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>HEARTH HOUSE</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker blue-kicker"><span>⌂</span> FAMILY + EVERYDAY LIFE</div><h1>Hearth<br /><em>House</em></h1><p>The living room of your world: care, rhythms, and the work that keeps everyone held.</p><div className="room-progress"><div><strong>{completed}/{chores.length}</strong><small>tended today</small></div><div><strong>4</strong><small>people linked</small></div><div><strong>2</strong><small>rituals due</small></div></div></section>
     <section className="goal-panel home-panel"><div className="panel-topline"><span className="panel-label">TODAY AT HOME</span><span className="home-weather">☾ 64°</span></div>{chores.map((chore, index) => <button className={`home-chore ${chore.done ? 'done' : ''}`} key={chore.label} onClick={() => toggleChore(index)}><span className="chore-check">{chore.done ? '✓' : ''}</span><span><strong>{chore.label}</strong><small>{chore.detail}</small></span><b>›</b></button>)}<div className="home-summary"><span className="home-spark">✦</span><p>{completed === chores.length ? 'The house is settled for tonight.' : 'One small tending can make the whole room feel lighter.'}</p></div></section>
+    <CompanionChat companion={companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')} realm="Hearth House" prompt="Help me make home feel lighter" />
     <div className="room-note"><span className="owl-glyph blue-owl">☾</span><div><strong>{companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')?.name ?? 'Hearth'} · household guide</strong><p>“{companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')?.context ?? 'Care is not one grand gesture. It is the little things, remembered.'}”</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> TEND A CHORE TO MARK IT COMPLETE</div>
+  </div>
+}
+
+function CompanionChat({ companion, realm, prompt }: { companion?: Companion; realm: string; prompt: string }) {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [messages, setMessages] = useState<{ from: 'you' | 'guide'; text: string }[]>([])
+  const guideName = companion?.name ?? (realm === 'The Library' ? 'Owl' : 'Hearth')
+  const send = (text: string) => {
+    const clean = text.trim()
+    if (!clean) return
+    const reply = realm === 'The Library'
+      ? `${guideName} says: start with the smallest version you can finish today. A finished page gives the next page somewhere to land.`
+      : `${guideName} says: choose the kindest visible next step. The house does not need perfection, just a little more ease.`
+    setMessages((current) => [...current, { from: 'you', text: clean }, { from: 'guide', text: reply }])
+    setDraft('')
+  }
+  return <div className={`companion-chat ${open ? 'open' : ''}`}>
+    <button className="chat-trigger" onClick={() => setOpen((current) => !current)}><span>✦</span> Talk with {guideName}<b>{open ? '−' : '+'}</b></button>
+    {open && <div className="chat-window"><div className="chat-context"><span className="companion-avatar mini">{guideName === 'Juniper' ? '☾' : guideName.slice(0, 1).toUpperCase()}</span><div><strong>{guideName}</strong><small>{companion?.role ?? `${realm} guide`}</small></div></div><div className="chat-messages"><div className="chat-message guide-message">{companion?.context ?? 'I am here to help you find a gentle next step.'}</div>{messages.map((message, index) => <div className={`chat-message ${message.from === 'you' ? 'you-message' : 'guide-message'}`} key={`${message.text}-${index}`}>{message.text}</div>)}</div><div className="chat-suggestions"><button onClick={() => send(prompt)}>{prompt}</button><button onClick={() => send('What should I do first?')}>What first?</button></div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(draft) }}><input aria-label={`Message ${guideName}`} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Say something..." /><button aria-label="Send message" disabled={!draft.trim()}>↗</button></form></div>}
   </div>
 }
 
