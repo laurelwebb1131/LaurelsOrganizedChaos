@@ -1,6 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { randomUUID } from 'node:crypto'
 
 const maxFieldLength = 1200
+const requestWindowMs = 60_000
+const requestLimit = 20
+const requestCounts = new Map<string, { startedAt: number; count: number }>()
 
 export type CompanionRequest = {
   companionName: string
@@ -19,9 +23,22 @@ export function handleHealth(_request: IncomingMessage, response: ServerResponse
 }
 
 export async function handleCompanion(request: IncomingMessage, response: ServerResponse) {
+  const requestId = randomUUID()
+  response.setHeader('X-Request-Id', requestId)
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
     writeJson(response, 405, { error: 'Method not allowed' })
+    return
+  }
+  const clientKey = request.headers['x-forwarded-for']?.toString().split(',')[0].trim() ?? request.socket.remoteAddress ?? 'unknown'
+  const now = Date.now()
+  const existing = requestCounts.get(clientKey)
+  const window = existing && now - existing.startedAt < requestWindowMs ? existing : { startedAt: now, count: 0 }
+  window.count += 1
+  requestCounts.set(clientKey, window)
+  if (window.count > requestLimit) {
+    response.setHeader('Retry-After', '60')
+    writeJson(response, 429, { error: 'Too many requests', requestId })
     return
   }
 
@@ -31,7 +48,7 @@ export async function handleCompanion(request: IncomingMessage, response: Server
     const apiKey = process.env.OPENAI_COMPATIBLE_API_KEY
     const model = process.env.OPENAI_COMPATIBLE_MODEL
     if (!baseUrl || !apiKey || !model) {
-      writeJson(response, 503, { error: 'Companion provider is not configured' })
+      writeJson(response, 503, { error: 'Companion provider is not configured', requestId })
       return
     }
 
@@ -53,16 +70,16 @@ export async function handleCompanion(request: IncomingMessage, response: Server
     }, 12000)
 
     if (!providerResponse.ok) {
-      writeJson(response, providerResponse.status === 429 ? 429 : 502, { error: 'Companion provider request failed' })
+      writeJson(response, providerResponse.status === 429 ? 429 : 502, { error: 'Companion provider request failed', requestId })
       return
     }
     const data = await providerResponse.json() as CompanionProviderResponse
     const reply = data.choices?.[0]?.message?.content?.trim()
     if (!reply) throw new Error('Provider returned no message')
-    writeJson(response, 200, { reply: reply.slice(0, 1600) })
+    writeJson(response, 200, { reply: reply.slice(0, 1600), requestId })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Invalid companion request'
-    writeJson(response, message === 'Request body too large' ? 413 : 400, { error: message })
+    writeJson(response, message === 'Request body too large' ? 413 : 400, { error: message, requestId })
   }
 }
 

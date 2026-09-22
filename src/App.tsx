@@ -280,8 +280,9 @@ function CompanionChat({ companion, realm, prompt, goals, habits }: { companion?
       const realmHabits = habits.filter((habit) => habit.realm === realm || habit.realm === 'All realms').map(({ title, realm: habitRealm, cadence, completedToday }) => ({ title, realm: habitRealm, cadence, completedToday }))
       const reply = await requestCompanionReply({ companionName: guideName, companionRole: companion?.role ?? `${realm} guide`, companionContext: companion?.context ?? '', realm, userMessage: clean, goals: realmGoals, habits: realmHabits })
       setMessages((current) => [...current, { from: 'guide', text: reply }])
-    } catch {
-      setMessages((current) => [...current, { from: 'guide', text: fallback }])
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'The companion service is unavailable.'
+      setMessages((current) => [...current, { from: 'guide', text: `${fallback} (${reason})` }])
     } finally {
       setIsThinking(false)
     }

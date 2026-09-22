@@ -27,7 +27,10 @@ export async function requestCompanionReply(context: CompanionContext): Promise<
     window.clearTimeout(timeout)
   }
 
-  if (!response.ok) throw new Error(`Companion service returned ${response.status}`)
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({})) as { error?: string }
+    throw new Error(data.error ?? `Companion service returned ${response.status}`)
+  }
   const data = (await response.json()) as CompanionReply
   if (!data.reply) throw new Error('Companion service returned an empty reply')
   return data.reply
