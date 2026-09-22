@@ -96,6 +96,15 @@ function App() {
 }
 
 function LibraryRoom({ onBack }: { onBack: () => void }) {
+  const [idea, setIdea] = useState<string | null>(null)
+  const [savedIdeas, setSavedIdeas] = useState<string[]>([])
+  const ideas = [
+    'Set a 20-minute “tiny prototype” timer and build one beautiful corner of Hearthwise before lunch.',
+    'Write three sentences about the person this world is meant to help, then use one as your next design test.',
+    'Choose one Mythic Earth creature and give it a role in a real goal: guide, witness, challenger, or reward.',
+  ]
+  const askJuniper = () => setIdea(ideas[savedIdeas.length % ideas.length])
+
   return <div className="room-app">
     <div className="room-canvas">
       <Canvas camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}>
@@ -113,8 +122,8 @@ function LibraryRoom({ onBack }: { onBack: () => void }) {
     </div>
     <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><button className="room-profile">LW</button></header>
     <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>68%</strong><small>weekly tending</small></div><div><strong>12</strong><small>open ideas</small></div><div><strong>3</strong><small>active goals</small></div></div></section>
-    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div><button className="idea-button"><span>✧</span> Ask Juniper for an idea <b>↗</b></button></section>
-    <div className="room-note"><span className="owl-glyph">◉</span><div><strong>Owl says</strong><p>“A good idea is often just a question you have not asked yet.”</p></div></div>
+    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div>{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { setSavedIdeas((current) => [...current, idea]); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
+    <div className="room-note"><span className="owl-glyph">◉</span><div><strong>Owl says</strong><p>{savedIdeas.length ? `${savedIdeas.length} idea${savedIdeas.length === 1 ? '' : 's'} tucked onto your shelf.` : '“A good idea is often just a question you have not asked yet.”'}</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> SELECT A SHELF TO EXPLORE</div>
   </div>
 }
@@ -127,6 +136,9 @@ function LibraryScene() {
     <mesh position={[0, -.78, 1.2]}><boxGeometry args={[.18, .95, 1.05]} /><meshStandardMaterial color="#3b2448" /></mesh>
     <mesh position={[-1.12, 1.1, 1.05]}><icosahedronGeometry args={[.34, 2]} /><meshStandardMaterial color="#ff3d9b" emissive="#ff3d9b" emissiveIntensity={1.2} /></mesh>
     <mesh position={[1.1, 1.35, 1.1]}><icosahedronGeometry args={[.27, 2]} /><meshStandardMaterial color="#56b4ff" emissive="#56b4ff" emissiveIntensity={1.1} /></mesh>
+    <ImportedAsset path="/assets/cc0/nature/bench.glb" position={[-1.55, -1.15, 1.25]} scale={0.42} />
+    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[1.45, -1.1, 1.3]} scale={0.34} />
+    <ImportedAsset path="/assets/cc0/nature/deer.glb" position={[2.25, -1.05, -0.25]} scale={0.22} />
     <Float speed={1.2} floatIntensity={.25}><group position={[1.05, .18, 1.18]}><mesh><sphereGeometry args={[.3, 24, 24]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.12, .28, 0]} rotation={[0, 0, -.3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[.12, .28, 0]} rotation={[0, 0, .3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh><mesh position={[.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh></group></Float>
   </group>
 }
