@@ -3,6 +3,7 @@ import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useG
 import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
 import { defaultWorldState, loadWorldState, saveWorldState } from './worldState'
+import type { Companion } from './worldState'
 
 type LocationId = 'library' | 'home' | 'university' | 'love-doctor'
 
@@ -27,6 +28,7 @@ function App() {
   const [worldState, setWorldState] = useState(loadWorldState)
   const [selectedLocation, setSelectedLocation] = useState<LocationId>('library')
   const [showPeople, setShowPeople] = useState(true)
+  const [showCodex, setShowCodex] = useState(false)
   const [activeRoom, setActiveRoom] = useState<LocationId | null>(null)
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
   useEffect(() => { saveWorldState(worldState) }, [worldState])
@@ -73,7 +75,7 @@ function App() {
         <div className="nav-divider" />
         <div className="nav-kicker">WORLD SETTINGS</div>
         <button className="nav-tab"><span>⚙</span> Customize world</button>
-        <button className="nav-tab"><span>⌘</span> Invite a familiar</button>
+        <button className="nav-tab" onClick={() => setShowCodex(true)}><span>⌘</span> Invite a familiar</button>
         <div className="nav-foot"><span className="tiny-moon">◐</span><div><strong>Waning moon</strong><small>Good night for tending</small></div></div>
       </aside>
 
@@ -95,8 +97,28 @@ function App() {
 
       <div className="world-legend"><span><i className="legend-pink" /> PERSONAL</span><span><i className="legend-blue" /> DAILY LIFE</span><span><i className="legend-purple" /> GROWTH</span></div>
       <div className="zoom-hint">DRAG TO ROTATE <b>·</b> SCROLL TO ZOOM</div>
+      {showCodex && <CompanionCodex companions={worldState.companions} onClose={() => setShowCodex(false)} onAdd={(companion) => setWorldState((state) => ({ ...state, companions: [...state.companions, companion] }))} />}
     </div>
   )
+}
+
+function CompanionCodex({ companions, onClose, onAdd }: { companions: Companion[]; onClose: () => void; onAdd: (companion: Companion) => void }) {
+  const [adding, setAdding] = useState(false)
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [realm, setRealm] = useState('All realms')
+  const [context, setContext] = useState('')
+  const save = () => {
+    if (!name.trim() || !role.trim()) return
+    onAdd({ id: `${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`, name: name.trim(), role: role.trim(), realm, context: context.trim() || 'No context added yet.' })
+    setName(''); setRole(''); setContext(''); setAdding(false)
+  }
+  return <div className="codex-scrim" role="presentation" onClick={onClose}><section className="codex-panel" role="dialog" aria-modal="true" aria-labelledby="codex-title" onClick={(event) => event.stopPropagation()}>
+    <div className="codex-header"><div><span className="panel-label">YOUR WORLD · PEOPLE + FAMILIARS</span><h2 id="codex-title">Companion Codex</h2></div><button className="close-button" onClick={onClose} aria-label="Close companion codex">×</button></div>
+    <p className="codex-intro">Give the people and guides in your life a place in Hearthwise. You choose what is remembered; nothing is inferred.</p>
+    <div className="companion-list">{companions.map((companion) => <article className="companion-card" key={companion.id}><div className="companion-avatar">{companion.name === 'Juniper' ? '☾' : companion.name.slice(0, 1).toUpperCase()}</div><div><strong>{companion.name}</strong><span>{companion.role} · {companion.realm}</span><p>{companion.context}</p></div></article>)}</div>
+    {adding ? <div className="companion-form"><label>Name<input value={name} onChange={(event) => setName(event.target.value)} placeholder="What should Hearthwise call them?" /></label><label>Role<input value={role} onChange={(event) => setRole(event.target.value)} placeholder="e.g. partner, mentor, sibling" /></label><label>Realm<select value={realm} onChange={(event) => setRealm(event.target.value)}><option>All realms</option><option>Hearth House</option><option>The Library</option><option>The University</option><option>The Love Doctor</option></select></label><label>Helpful context<span className="optional">optional</span><textarea value={context} onChange={(event) => setContext(event.target.value)} placeholder="What should their familiar know to be useful and respectful?" rows={3} /></label><div className="form-actions"><button className="secondary-button" onClick={() => setAdding(false)}>Cancel</button><button className="enter-button form-save" onClick={save} disabled={!name.trim() || !role.trim()}>Add companion</button></div></div> : <button className="idea-button codex-add" onClick={() => setAdding(true)}><span>＋</span> Add someone from your world <b>↗</b></button>}
+  </section></div>
 }
 
 function LibraryRoom({ onBack, savedIdeas, onSaveIdea }: { onBack: () => void; savedIdeas: string[]; onSaveIdea: (idea: string) => void }) {
