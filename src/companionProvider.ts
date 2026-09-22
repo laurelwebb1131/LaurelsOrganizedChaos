@@ -4,6 +4,8 @@ export type CompanionContext = {
   companionContext: string
   realm: string
   userMessage: string
+  goals?: { title: string; progress: number; nextStep: string }[]
+  habits?: { title: string; cadence: string; completedToday: boolean }[]
 }
 
 export type CompanionReply = {

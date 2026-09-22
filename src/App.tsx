@@ -2,7 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
 import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
-import { defaultWorldState, loadWorldState, saveWorldState } from './worldState'
+import { defaultWorldState, exportWorldState, loadWorldState, resetWorldState, saveWorldState } from './worldState'
 import type { Companion } from './worldState'
 import { requestCompanionReply } from './companionProvider'
 
@@ -27,15 +27,49 @@ const locations: Location[] = [
 
 function App() {
   const [worldState, setWorldState] = useState(loadWorldState)
-  const [selectedLocation, setSelectedLocation] = useState<LocationId>('library')
+  const [selectedLocation, setSelectedLocation] = useState<LocationId>(() => {
+    const value = window.location.hash.replace('#realm/', '')
+    return locations.some((location) => location.id === value) ? value as LocationId : 'library'
+  })
   const [showPeople, setShowPeople] = useState(true)
   const [showCodex, setShowCodex] = useState(false)
-  const [activeRoom, setActiveRoom] = useState<LocationId | null>(null)
+  const [activeRoom, setActiveRoom] = useState<LocationId | null>(() => {
+    const value = window.location.hash.replace('#room/', '')
+    return value === 'library' || value === 'home' ? value : null
+  })
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
   useEffect(() => { saveWorldState(worldState) }, [worldState])
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'hearthwise-world-v2') setWorldState(loadWorldState())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash
+      if (hash.startsWith('#realm/')) setSelectedLocation(hash.replace('#realm/', '') as LocationId)
+      if (hash.startsWith('#room/')) setActiveRoom(hash.replace('#room/', '') as LocationId)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+  const selectLocation = (location: LocationId) => {
+    setSelectedLocation(location)
+    window.location.hash = `realm/${location}`
+  }
+  const enterRoom = (room: LocationId) => {
+    setActiveRoom(room)
+    window.location.hash = `room/${room}`
+  }
+  const leaveRoom = () => {
+    setActiveRoom(null)
+    window.location.hash = `realm/${selectedLocation}`
+  }
 
-  if (activeRoom === 'library') return <LibraryRoom onBack={() => setActiveRoom(null)} savedIdeas={worldState.savedIdeas} companions={worldState.companions} onSaveIdea={(idea) => setWorldState((state) => ({ ...state, savedIdeas: [...state.savedIdeas, idea] }))} />
-  if (activeRoom === 'home') return <HomeRoom onBack={() => setActiveRoom(null)} chores={worldState.chores} companions={worldState.companions} onChoresChange={(chores) => setWorldState((state) => ({ ...state, chores }))} />
+  if (activeRoom === 'library') return <LibraryRoom onBack={leaveRoom} savedIdeas={worldState.savedIdeas} companions={worldState.companions} onSaveIdea={(idea) => setWorldState((state) => ({ ...state, savedIdeas: [...state.savedIdeas, idea] }))} />
+  if (activeRoom === 'home') return <HomeRoom onBack={leaveRoom} chores={worldState.chores} companions={worldState.companions} onChoresChange={(chores) => setWorldState((state) => ({ ...state, chores }))} />
 
   return (
     <div className="world-app">
@@ -50,7 +84,7 @@ function App() {
           <Stars radius={80} depth={35} count={1800} factor={2.1} saturation={0.5} fade speed={0.4} />
           <Sparkles count={90} scale={[8, 6, 8]} size={1.7} speed={0.2} color="#ff9dcd" opacity={0.32} />
           <Suspense fallback={null}>
-            <PlanetWorld selectedLocation={selectedLocation} onSelect={setSelectedLocation} showPeople={showPeople} />
+            <PlanetWorld selectedLocation={selectedLocation} onSelect={selectLocation} showPeople={showPeople} />
             <ImportedCreature position={[-3.1, -1.55, 1.1]} />
             <ImportedAsset path="/assets/cc0/creatures/triangulon.glb" position={[3.1, -1.3, 1.2]} scale={0.22} />
             <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[0, -2.4, 2.4]} scale={0.35} />
@@ -75,7 +109,15 @@ function App() {
         <button className="nav-tab"><span>☽</span> Night journal</button>
         <div className="nav-divider" />
         <div className="nav-kicker">WORLD SETTINGS</div>
-        <button className="nav-tab"><span>⚙</span> Customize world</button>
+        <button className="nav-tab" onClick={() => {
+          const file = new Blob([exportWorldState(worldState)], { type: 'application/json' })
+          const url = URL.createObjectURL(file)
+          const link = document.createElement('a')
+          link.href = url; link.download = 'hearthwise-world.json'; link.click(); URL.revokeObjectURL(url)
+        }}><span>⇩</span> Export world</button>
+        <button className="nav-tab" onClick={() => {
+          if (window.confirm('Reset your local Hearthwise world? This cannot be undone.')) setWorldState(resetWorldState())
+        }}><span>↺</span> Reset world</button>
         <button className="nav-tab" onClick={() => setShowCodex(true)}><span>⌘</span> Invite a familiar</button>
         <div className="nav-foot"><span className="tiny-moon">◐</span><div><strong>Waning moon</strong><small>Good night for tending</small></div></div>
       </aside>
@@ -92,7 +134,7 @@ function App() {
         <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
         <p>{active.description}</p>
         <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
-        <button className="enter-button" onClick={() => setActiveRoom(active.id === 'home' || active.id === 'library' ? active.id : null)}>Enter {active.name} <span>↗</span></button>
+        <button className="enter-button" onClick={() => (active.id === 'home' || active.id === 'library') && enterRoom(active.id)}>Enter {active.name} <span>↗</span></button>
         <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
       </section>
 
