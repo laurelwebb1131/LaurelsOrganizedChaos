@@ -25,7 +25,10 @@ const locations: Location[] = [
 function App() {
   const [selectedLocation, setSelectedLocation] = useState<LocationId>('library')
   const [showPeople, setShowPeople] = useState(true)
+  const [activeRoom, setActiveRoom] = useState<LocationId | null>(null)
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
+
+  if (activeRoom === 'library') return <LibraryRoom onBack={() => setActiveRoom(null)} />
 
   return (
     <div className="world-app">
@@ -74,7 +77,7 @@ function App() {
         <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
         <p>{active.description}</p>
         <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
-        <button className="enter-button" onClick={() => window.alert(`${active.name} is the next room to build.`)}>Enter {active.name} <span>↗</span></button>
+        <button className="enter-button" onClick={() => setActiveRoom(active.id)}>Enter {active.name} <span>↗</span></button>
         <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
       </section>
 
@@ -82,6 +85,40 @@ function App() {
       <div className="zoom-hint">DRAG TO ROTATE <b>·</b> SCROLL TO ZOOM</div>
     </div>
   )
+}
+
+function LibraryRoom({ onBack }: { onBack: () => void }) {
+  return <div className="room-app">
+    <div className="room-canvas">
+      <Canvas camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}>
+        <color attach="background" args={['#0b0810']} />
+        <fog attach="fog" args={['#0b0810', 7, 13]} />
+        <ambientLight intensity={1.5} color="#bfb3d1" />
+        <pointLight position={[0, 4, 3]} intensity={14} distance={10} color="#ff3d9b" />
+        <pointLight position={[-4, 2, 1]} intensity={10} distance={7} color="#9257e3" />
+        <Stars radius={70} depth={30} count={900} factor={1.8} fade speed={0.25} />
+        <LibraryScene />
+        <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
+      </Canvas>
+    </div>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><button className="room-profile">LW</button></header>
+    <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>68%</strong><small>weekly tending</small></div><div><strong>12</strong><small>open ideas</small></div><div><strong>3</strong><small>active goals</small></div></div></section>
+    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div><button className="idea-button"><span>✧</span> Ask Juniper for an idea <b>↗</b></button></section>
+    <div className="room-note"><span className="owl-glyph">◉</span><div><strong>Owl says</strong><p>“A good idea is often just a question you have not asked yet.”</p></div></div>
+    <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> SELECT A SHELF TO EXPLORE</div>
+  </div>
+}
+
+function LibraryScene() {
+  return <group>
+    <mesh position={[0, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 16]} /><meshStandardMaterial color="#15101b" roughness={0.95} /></mesh>
+    {[[-3.2, 1.1, -1.1], [0, 1.1, -1.5], [3.2, 1.1, -1.1]].map(([x, y, z], index) => <group key={x} position={[x, y, z]}><mesh><boxGeometry args={[2.55, 3.9, .32]} /><meshStandardMaterial color={index === 1 ? '#291a37' : '#1d1528'} roughness={.8} /></mesh>{Array.from({ length: 4 }).map((_, shelf) => <mesh key={shelf} position={[0, -1.3 + shelf * .82, .24]}><boxGeometry args={[2.25, .06, .18]} /><meshStandardMaterial color="#704a7e" emissive="#2e163a" emissiveIntensity={.4} /></mesh>)}</group>)}
+    <mesh position={[0, -0.3, 1.2]}><boxGeometry args={[3.2, .18, 1.25]} /><meshStandardMaterial color="#5e3768" roughness={.5} metalness={.2} /></mesh>
+    <mesh position={[0, -.78, 1.2]}><boxGeometry args={[.18, .95, 1.05]} /><meshStandardMaterial color="#3b2448" /></mesh>
+    <mesh position={[-1.12, 1.1, 1.05]}><icosahedronGeometry args={[.34, 2]} /><meshStandardMaterial color="#ff3d9b" emissive="#ff3d9b" emissiveIntensity={1.2} /></mesh>
+    <mesh position={[1.1, 1.35, 1.1]}><icosahedronGeometry args={[.27, 2]} /><meshStandardMaterial color="#56b4ff" emissive="#56b4ff" emissiveIntensity={1.1} /></mesh>
+    <Float speed={1.2} floatIntensity={.25}><group position={[1.05, .18, 1.18]}><mesh><sphereGeometry args={[.3, 24, 24]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.12, .28, 0]} rotation={[0, 0, -.3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[.12, .28, 0]} rotation={[0, 0, .3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh><mesh position={[.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh></group></Float>
+  </group>
 }
 
 function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocation: LocationId; onSelect: (id: LocationId) => void; showPeople: boolean }) {
