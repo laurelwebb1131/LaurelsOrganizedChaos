@@ -18,4 +18,12 @@
 5. Profile on representative hardware before increasing shadow map sizes or particle counts.
 6. Keep the fallback procedural silhouette for every important character and location.
 
+## Realm assignments
+
+- **The Library:** bench, deer, crystal cluster. Quiet study and idea-garden atmosphere.
+- **Hearth House:** bench, tree, bush. Familiar domestic space with living-world edges.
+- **The University:** regular column, crystal base. Structured study and observatory language.
+- **The Love Doctor:** crystal cluster, food booth. Shared space and ritual hospitality.
+- **Mythic Earth encounter layer:** Triangulon, Hexabear, Whormbus, and the Quaternius spider remain encounter candidates, not UI decoration.
+
 Credentials are never part of the graphics pipeline. Paid asset stores, model-generation services, or hosted AI providers must be configured by the operator through private environment variables or local tooling.

@@ -315,9 +315,9 @@ function LibraryScene() {
     <mesh position={[0, -.78, 1.2]}><boxGeometry args={[.18, .95, 1.05]} /><meshStandardMaterial color="#3b2448" /></mesh>
     <mesh position={[-1.12, 1.1, 1.05]}><icosahedronGeometry args={[.34, 2]} /><meshStandardMaterial color="#ff3d9b" emissive="#ff3d9b" emissiveIntensity={1.2} /></mesh>
     <mesh position={[1.1, 1.35, 1.1]}><icosahedronGeometry args={[.27, 2]} /><meshStandardMaterial color="#56b4ff" emissive="#56b4ff" emissiveIntensity={1.1} /></mesh>
-    <ImportedAsset path="/assets/cc0/nature/bench.glb" position={[-1.55, -1.15, 1.25]} scale={0.42} />
-    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[1.45, -1.1, 1.3]} scale={0.34} />
-    <ImportedAsset path="/assets/cc0/nature/deer.glb" position={[2.25, -1.05, -0.25]} scale={0.22} />
+    <ImportedAsset path="/assets/cc0/nature/bench_01_art.glb" position={[-1.55, -1.15, 1.25]} scale={0.42} />
+    <ImportedAsset path="/assets/cc0/environment/crystal_cluster.glb" position={[1.45, -1.1, 1.3]} scale={0.34} />
+    <ImportedAsset path="/assets/cc0/nature/deerarmature.glb" position={[2.25, -1.05, -0.25]} scale={0.22} />
     <Float speed={1.2} floatIntensity={.25}><group position={[1.05, .18, 1.18]}><mesh><sphereGeometry args={[.3, 24, 24]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.12, .28, 0]} rotation={[0, 0, -.3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[.12, .28, 0]} rotation={[0, 0, .3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh><mesh position={[.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh></group></Float>
   </group>
 }
@@ -330,8 +330,9 @@ function HouseScene() {
     <mesh position={[-1.65, .45, -.88]}><boxGeometry args={[1.4, 1.15, .28]} /><meshStandardMaterial color="#533b62" roughness={.65} /></mesh>
     <mesh position={[1.55, .25, -.8]}><boxGeometry args={[1.4, .65, .7]} /><meshStandardMaterial color="#3b2b48" roughness={.7} /></mesh>
     <mesh position={[1.55, .62, -.8]}><boxGeometry args={[1.55, .08, .8]} /><meshStandardMaterial color="#ff9dcd" emissive="#ff3d9b" emissiveIntensity={.16} roughness={.45} /></mesh>
-    <ImportedAsset path="/assets/cc0/nature/bench.glb" position={[-.2, -1.1, .55]} scale={.5} />
-    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[2.2, -1.05, .85]} scale={.3} />
+    <ImportedAsset path="/assets/cc0/nature/bench_01_art.glb" position={[-.2, -1.1, .55]} scale={.5} />
+    <ImportedAsset path="/assets/cc0/nature/tree_01_art.glb" position={[-2.3, -1.1, -.2]} scale={.4} />
+    <ImportedAsset path="/assets/cc0/nature/bush_01_art.glb" position={[2.2, -1.05, .85]} scale={.28} />
     <mesh position={[-2.2, .85, -.8]}><sphereGeometry args={[.34, 24, 24]} /><meshStandardMaterial color="#56b4ff" emissive="#56b4ff" emissiveIntensity={.45} roughness={.28} /></mesh>
     <mesh position={[-2.2, .85, -.42]}><sphereGeometry args={[.06, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
   </group>
@@ -345,8 +346,8 @@ function UniversityScene() {
     <mesh position={[0, .1, .65]}><cylinderGeometry args={[1.25, 1.25, .16, 48]} /><meshStandardMaterial color="#261d47" roughness={.55} metalness={.2} /></mesh>
     <mesh position={[0, .28, .65]}><torusGeometry args={[.88, .035, 12, 48]} /><meshBasicMaterial color="#56b4ff" /></mesh>
     <mesh position={[0, .5, .65]}><icosahedronGeometry args={[.36, 2]} /><meshStandardMaterial color="#9257e3" emissive="#9257e3" emissiveIntensity={.8} roughness={.2} metalness={.32} /></mesh>
-    <ImportedAsset path="/assets/cc0/nature/bench.glb" position={[-1.7, -1.1, .7]} scale={.42} />
-    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[1.8, -1.05, .8]} scale={.3} />
+    <ImportedAsset path="/assets/cc0/environment/column_regular.glb" position={[-1.7, -1.1, .7]} scale={.42} />
+    <ImportedAsset path="/assets/cc0/environment/crystal_base.glb" position={[1.8, -1.05, .8]} scale={.3} />
   </group>
 }
 
@@ -359,7 +360,8 @@ function LoveScene() {
     <mesh position={[1.35, -.18, .6]}><sphereGeometry args={[.82, 32, 24]} /><meshStandardMaterial color="#63305b" roughness={.7} /></mesh>
     <mesh position={[0, .7, .7]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[.8, .06, 16, 48]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
     <mesh position={[0, .7, .7]}><sphereGeometry args={[.34, 24, 24]} /><meshStandardMaterial color="#ff9dcd" emissive="#ff3d9b" emissiveIntensity={.35} roughness={.28} /></mesh>
-    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[-2.1, -1.05, .9]} scale={.28} />
+    <ImportedAsset path="/assets/cc0/environment/crystal_cluster.glb" position={[-2.1, -1.05, .9]} scale={.28} />
+    <ImportedAsset path="/assets/cc0/environment/booth_food01.glb" position={[2.1, -1.05, .6]} scale={.26} />
   </group>
 }
 
@@ -461,9 +463,17 @@ function SceneLoading({ label }: { label: string }) {
 }
 
 useGLTF.preload('/assets/creatures/cc0-spider.glb')
-useGLTF.preload('/assets/cc0/creatures/triangulon.glb')
-useGLTF.preload('/assets/cc0/environment/crystal-cluster.glb')
-useGLTF.preload('/assets/cc0/nature/deer.glb')
+useGLTF.preload('/assets/cc0/creatures/001_triangulon_art.glb')
+useGLTF.preload('/assets/cc0/creatures/003_hexabear_art.glb')
+useGLTF.preload('/assets/cc0/creatures/006_whormbus_art.glb')
+useGLTF.preload('/assets/cc0/environment/crystal_cluster.glb')
+useGLTF.preload('/assets/cc0/environment/crystal_base.glb')
+useGLTF.preload('/assets/cc0/environment/column_regular.glb')
+useGLTF.preload('/assets/cc0/nature/bench_01_art.glb')
+useGLTF.preload('/assets/cc0/nature/bush_01_art.glb')
+useGLTF.preload('/assets/cc0/nature/deerarmature.glb')
+useGLTF.preload('/assets/cc0/nature/tree_01_art.glb')
+useGLTF.preload('/assets/cc0/environment/booth_food01.glb')
 
 function LocationMarker({ location, selected, hovered, onHover, onSelect }: { location: Location; selected: boolean; hovered: boolean; onHover: (id: LocationId | null) => void; onSelect: (id: LocationId) => void }) {
   return <group position={location.position} onPointerOver={(event) => { event.stopPropagation(); onHover(location.id) }} onPointerOut={() => onHover(null)} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
