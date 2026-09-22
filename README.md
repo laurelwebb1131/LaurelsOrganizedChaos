@@ -15,6 +15,22 @@ Then open the local Vite URL shown in the terminal. The production build can be 
 npm run build
 ```
 
+## Desktop app
+
+The project also includes a Tauri 2 desktop shell for Windows, macOS, and Linux. Install Rust through `rustup`, then run:
+
+```bash
+npm run tauri:dev
+```
+
+To produce an installable desktop bundle:
+
+```bash
+npm run tauri:build
+```
+
+The desktop shell bundles the frontend and local licensed assets. The optional companion API remains a server-side integration; do not put provider keys in the desktop bundle. Configure a hosted `/api/companion` endpoint before enabling production AI.
+
 ## Prototype scope
 
 The current prototype includes a navigable 3D planet and four selectable locations:
