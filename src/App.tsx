@@ -33,6 +33,8 @@ function App() {
     const value = window.location.hash.replace('#realm/', '')
     return locations.some((location) => location.id === value) ? value as LocationId : 'library'
   })
+  const [hoveredLocation, setHoveredLocation] = useState<LocationId | null>(null)
+  const [showLocationPanel, setShowLocationPanel] = useState(true)
   const [showPeople, setShowPeople] = useState(true)
   const [showCodex, setShowCodex] = useState(false)
   const [activeRoom, setActiveRoom] = useState<LocationId | null>(() => {
@@ -60,6 +62,7 @@ function App() {
   }, [])
   const selectLocation = (location: LocationId) => {
     setSelectedLocation(location)
+    setShowLocationPanel(true)
     window.location.hash = `realm/${location}`
   }
   const enterRoom = (room: LocationId) => {
@@ -89,7 +92,7 @@ function App() {
           <Stars radius={80} depth={35} count={1800} factor={2.1} saturation={0.5} fade speed={0.4} />
           <Sparkles count={90} scale={[8, 6, 8]} size={1.7} speed={0.2} color="#ff9dcd" opacity={0.32} />
           <Suspense fallback={<SceneLoading label="Loading your world..." />}>
-            <PlanetWorld selectedLocation={selectedLocation} onSelect={selectLocation} showPeople={showPeople} />
+            <PlanetWorld selectedLocation={selectedLocation} hoveredLocation={hoveredLocation} onHover={setHoveredLocation} onSelect={selectLocation} showPeople={showPeople} />
             <ContactShadows position={[0, -2.95, 0]} opacity={0.35} scale={8} blur={2.8} far={4.5} color="#10071a" />
           </Suspense>
           <OrbitControls enablePan={false} minDistance={6.3} maxDistance={11} minPolarAngle={Math.PI / 3.4} maxPolarAngle={Math.PI / 1.7} autoRotate autoRotateSpeed={0.18} />
@@ -131,14 +134,19 @@ function App() {
         <div className="orbit-line"><span /><b>4</b> realms active <i /> <b>7</b> day streak</div>
       </section>
 
-      <section className="location-panel">
-        <div className="panel-topline"><span className="panel-label">SELECTED REALM</span><button className="close-button" onClick={() => setSelectedLocation('library')}>×</button></div>
+      <div className="realm-dock" aria-label="Choose a realm">
+        <span className="dock-label">CHOOSE A DESTINATION</span>
+        <div className="dock-items">{locations.map((location) => <button key={location.id} className={`dock-item ${selectedLocation === location.id ? 'selected' : ''}`} onMouseEnter={() => setHoveredLocation(location.id)} onMouseLeave={() => setHoveredLocation(null)} onClick={() => selectLocation(location.id)} aria-pressed={selectedLocation === location.id}><span style={{ color: location.color }}>{location.icon}</span><strong>{location.name}</strong><small>{location.domain}</small></button>)}</div>
+      </div>
+      {showLocationPanel && <section className="location-panel">
+        <div className="panel-topline"><span className="panel-label">SELECTED REALM</span><button className="close-button" onClick={() => setShowLocationPanel(false)} aria-label="Close selected realm panel">×</button></div>
         <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
         <p>{active.description}</p>
         <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
         <button className="enter-button" onClick={() => (active.id === 'home' || active.id === 'library' || active.id === 'university' || active.id === 'love-doctor') && enterRoom(active.id)}>Enter {active.name} <span>↗</span></button>
         <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
-      </section>
+      </section>}
+      {!showLocationPanel && <button className="reopen-panel" onClick={() => setShowLocationPanel(true)}>Open realm details <span>↗</span></button>}
 
       <div className="world-legend"><span><i className="legend-pink" /> PERSONAL</span><span><i className="legend-blue" /> DAILY LIFE</span><span><i className="legend-purple" /> GROWTH</span></div>
       <div className="zoom-hint">DRAG TO ROTATE <b>·</b> SCROLL TO ZOOM</div>
@@ -355,11 +363,11 @@ function LoveScene() {
   </group>
 }
 
-function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocation: LocationId; onSelect: (id: LocationId) => void; showPeople: boolean }) {
+function PlanetWorld({ selectedLocation, hoveredLocation, onHover, onSelect, showPeople }: { selectedLocation: LocationId; hoveredLocation: LocationId | null; onHover: (id: LocationId | null) => void; onSelect: (id: LocationId) => void; showPeople: boolean }) {
   return <group>
     <Float speed={0.7} rotationIntensity={0.08} floatIntensity={0.16}>
       <MythicEarth />
-      {locations.map((location) => <LocationMarker key={location.id} location={location} selected={selectedLocation === location.id} onSelect={onSelect} />)}
+      {locations.map((location) => <LocationMarker key={location.id} location={location} selected={selectedLocation === location.id} hovered={hoveredLocation === location.id} onHover={onHover} onSelect={onSelect} />)}
       {showPeople && <Companion position={[0.1, 0.15, 2.58]} />}
       <MythicDragon position={[-2.9, 1.85, 1.1]} />
       <MoonSpirit position={[3.45, 2.5, -0.5]} />
@@ -457,11 +465,11 @@ useGLTF.preload('/assets/cc0/creatures/triangulon.glb')
 useGLTF.preload('/assets/cc0/environment/crystal-cluster.glb')
 useGLTF.preload('/assets/cc0/nature/deer.glb')
 
-function LocationMarker({ location, selected, onSelect }: { location: Location; selected: boolean; onSelect: (id: LocationId) => void }) {
-  return <group position={location.position} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
+function LocationMarker({ location, selected, hovered, onHover, onSelect }: { location: Location; selected: boolean; hovered: boolean; onHover: (id: LocationId | null) => void; onSelect: (id: LocationId) => void }) {
+  return <group position={location.position} onPointerOver={(event) => { event.stopPropagation(); onHover(location.id) }} onPointerOut={() => onHover(null)} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
     <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.2}>
       <mesh castShadow rotation={[0.4, 0.2, 0.35]}>
-        <octahedronGeometry args={[selected ? 0.34 : 0.26, 2]} />
+        <octahedronGeometry args={[selected || hovered ? 0.38 : 0.26, 2]} />
         <meshPhysicalMaterial color={location.color} emissive={location.color} emissiveIntensity={selected ? 1.8 : 0.8} roughness={0.18} metalness={0.32} clearcoat={.9} clearcoatRoughness={.12} />
       </mesh>
       <mesh scale={.5} position={[0, -.22, 0]}><cylinderGeometry args={[.12, .2, .4, 8]} /><meshStandardMaterial color="#c9cdd8" metalness={.72} roughness={.25} /></mesh>
