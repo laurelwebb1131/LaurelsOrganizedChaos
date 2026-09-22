@@ -29,6 +29,7 @@ function App() {
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
 
   if (activeRoom === 'library') return <LibraryRoom onBack={() => setActiveRoom(null)} />
+  if (activeRoom === 'home') return <HomeRoom onBack={() => setActiveRoom(null)} />
 
   return (
     <div className="world-app">
@@ -85,7 +86,7 @@ function App() {
         <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
         <p>{active.description}</p>
         <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
-        <button className="enter-button" onClick={() => setActiveRoom(active.id)}>Enter {active.name} <span>↗</span></button>
+        <button className="enter-button" onClick={() => setActiveRoom(active.id === 'home' || active.id === 'library' ? active.id : null)}>Enter {active.name} <span>↗</span></button>
         <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
       </section>
 
@@ -128,6 +129,38 @@ function LibraryRoom({ onBack }: { onBack: () => void }) {
   </div>
 }
 
+function HomeRoom({ onBack }: { onBack: () => void }) {
+  const [chores, setChores] = useState([
+    { label: 'Start the evening dishes', detail: 'Kitchen · 15 minutes', done: false },
+    { label: 'Check tomorrow’s family calendar', detail: 'Planning · 5 minutes', done: true },
+    { label: 'Put the laundry away', detail: 'Household · 10 minutes', done: false },
+  ])
+  const completed = chores.filter((chore) => chore.done).length
+  const toggleChore = (index: number) => setChores((current) => current.map((chore, choreIndex) => choreIndex === index ? { ...chore, done: !chore.done } : chore))
+
+  return <div className="room-app home-room">
+    <div className="room-canvas">
+      <Canvas shadows camera={{ position: [0, 1.2, 7.8], fov: 40 }} dpr={[1, 2]}>
+        <color attach="background" args={['#090d14']} />
+        <fog attach="fog" args={['#090d14', 7, 13]} />
+        <ambientLight intensity={1.5} color="#b7c8dc" />
+        <directionalLight castShadow position={[3, 6, 4]} intensity={3.6} color="#e5f3ff" shadow-mapSize={[2048, 2048]} />
+        <pointLight position={[-3, 3, 2]} intensity={14} distance={8} color="#56b4ff" />
+        <pointLight position={[3, 2, 3]} intensity={10} distance={7} color="#ff9dcd" />
+        <Stars radius={70} depth={30} count={850} factor={1.6} fade speed={0.2} />
+        <HouseScene />
+        <ContactShadows position={[0, -1.35, 0]} opacity={0.5} scale={8} blur={2.4} far={4} color="#030509" />
+        <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
+      </Canvas>
+    </div>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>HEARTH HOUSE</strong></div><button className="room-profile">LW</button></header>
+    <section className="room-intro"><div className="copy-kicker blue-kicker"><span>⌂</span> FAMILY + EVERYDAY LIFE</div><h1>Hearth<br /><em>House</em></h1><p>The living room of your world: care, rhythms, and the work that keeps everyone held.</p><div className="room-progress"><div><strong>{completed}/{chores.length}</strong><small>tended today</small></div><div><strong>4</strong><small>people linked</small></div><div><strong>2</strong><small>rituals due</small></div></div></section>
+    <section className="goal-panel home-panel"><div className="panel-topline"><span className="panel-label">TODAY AT HOME</span><span className="home-weather">☾ 64°</span></div>{chores.map((chore, index) => <button className={`home-chore ${chore.done ? 'done' : ''}`} key={chore.label} onClick={() => toggleChore(index)}><span className="chore-check">{chore.done ? '✓' : ''}</span><span><strong>{chore.label}</strong><small>{chore.detail}</small></span><b>›</b></button>)}<div className="home-summary"><span className="home-spark">✦</span><p>{completed === chores.length ? 'The house is settled for tonight.' : 'One small tending can make the whole room feel lighter.'}</p></div></section>
+    <div className="room-note"><span className="owl-glyph blue-owl">☾</span><div><strong>Hearth says</strong><p>“Care is not one grand gesture. It is the little things, remembered.”</p></div></div>
+    <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> TEND A CHORE TO MARK IT COMPLETE</div>
+  </div>
+}
+
 function LibraryScene() {
   return <group>
     <mesh position={[0, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 16]} /><meshStandardMaterial color="#15101b" roughness={0.95} /></mesh>
@@ -140,6 +173,21 @@ function LibraryScene() {
     <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[1.45, -1.1, 1.3]} scale={0.34} />
     <ImportedAsset path="/assets/cc0/nature/deer.glb" position={[2.25, -1.05, -0.25]} scale={0.22} />
     <Float speed={1.2} floatIntensity={.25}><group position={[1.05, .18, 1.18]}><mesh><sphereGeometry args={[.3, 24, 24]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.12, .28, 0]} rotation={[0, 0, -.3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[.12, .28, 0]} rotation={[0, 0, .3]}><coneGeometry args={[.12, .32, 4]} /><meshStandardMaterial color="#18131f" /></mesh><mesh position={[-.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh><mesh position={[.11, .2, .28]}><sphereGeometry args={[.04, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh></group></Float>
+  </group>
+}
+
+function HouseScene() {
+  return <group>
+    <mesh position={[0, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 16]} /><meshStandardMaterial color="#101821" roughness={.95} /></mesh>
+    <mesh position={[0, .6, -1.15]}><boxGeometry args={[5.4, 3.8, .35]} /><meshStandardMaterial color="#17283a" roughness={.86} /></mesh>
+    <mesh position={[0, 2.6, -1.15]} rotation={[0, 0, Math.PI / 4]}><boxGeometry args={[3.8, 3.8, .38]} /><meshStandardMaterial color="#20374a" roughness={.82} /></mesh>
+    <mesh position={[-1.65, .45, -.88]}><boxGeometry args={[1.4, 1.15, .28]} /><meshStandardMaterial color="#533b62" roughness={.65} /></mesh>
+    <mesh position={[1.55, .25, -.8]}><boxGeometry args={[1.4, .65, .7]} /><meshStandardMaterial color="#3b2b48" roughness={.7} /></mesh>
+    <mesh position={[1.55, .62, -.8]}><boxGeometry args={[1.55, .08, .8]} /><meshStandardMaterial color="#ff9dcd" emissive="#ff3d9b" emissiveIntensity={.16} roughness={.45} /></mesh>
+    <ImportedAsset path="/assets/cc0/nature/bench.glb" position={[-.2, -1.1, .55]} scale={.5} />
+    <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[2.2, -1.05, .85]} scale={.3} />
+    <mesh position={[-2.2, .85, -.8]}><sphereGeometry args={[.34, 24, 24]} /><meshStandardMaterial color="#56b4ff" emissive="#56b4ff" emissiveIntensity={.45} roughness={.28} /></mesh>
+    <mesh position={[-2.2, .85, -.42]}><sphereGeometry args={[.06, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
   </group>
 }
 
