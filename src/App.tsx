@@ -66,9 +66,9 @@ function App() {
       </aside>
 
       <section className="world-copy">
-        <div className="copy-kicker"><span>✦</span> TUESDAY · WANING MOON</div>
+        <div className="copy-kicker"><span>✦</span> TUESDAY · WANING MOON · MYTHIC EARTH</div>
         <h1>Welcome back,<br /><em>Laurel.</em></h1>
-        <p>This is your world. Every place holds a part of the life you are making.</p>
+        <p>This is your world. Every place holds a part of the life you are making, and every legend may be real.</p>
         <div className="orbit-line"><span /><b>4</b> realms active <i /> <b>7</b> day streak</div>
       </section>
 
@@ -126,19 +126,66 @@ function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocat
     <Float speed={0.7} rotationIntensity={0.08} floatIntensity={0.16}>
       <mesh rotation={[0.15, -0.25, 0.1]}>
         <sphereGeometry args={[2.55, 96, 96]} />
-        <meshStandardMaterial color="#24202f" roughness={0.82} metalness={0.18} />
+        <meshStandardMaterial color="#174b70" roughness={0.86} metalness={0.08} />
       </mesh>
-      <mesh scale={1.02}>
+      <mesh scale={1.012} rotation={[0.15, -0.25, 0.1]}>
         <sphereGeometry args={[2.55, 64, 64]} />
-        <meshBasicMaterial color="#9257e3" transparent opacity={0.06} wireframe />
+        <meshBasicMaterial color="#56b4ff" transparent opacity={0.12} wireframe />
       </mesh>
+      <mesh scale={1.025} rotation={[0.15, -0.25, 0.1]}>
+        <sphereGeometry args={[2.55, 64, 64]} />
+        <meshStandardMaterial color="#8cd3ff" transparent opacity={0.08} roughness={0.2} metalness={0.1} />
+      </mesh>
+      <EarthLand />
+      <CloudBands />
       {locations.map((location) => <LocationMarker key={location.id} location={location} selected={selectedLocation === location.id} onSelect={onSelect} />)}
       {showPeople && <Companion position={[0.1, 0.15, 2.58]} />}
+      <MythicDragon position={[-2.9, 1.85, 1.1]} />
+      <MoonSpirit position={[3.45, 2.5, -0.5]} />
     </Float>
     <mesh position={[0, 0, -0.2]} rotation={[Math.PI / 2, 0, 0]}>
       <ringGeometry args={[2.9, 3.02, 96]} />
       <meshBasicMaterial color="#ff3d9b" transparent opacity={0.12} />
     </mesh>
+  </group>
+}
+
+function EarthLand() {
+  const landforms: [number, number, number, number, number, number][] = [
+    [-1.48, 1.2, 1.78, .9, .32, .18], [-.76, 1.66, 1.72, .52, .25, .16],
+    [.44, 1.7, 1.72, .85, .3, .2], [1.25, .95, 1.9, .58, .38, .2],
+    [-1.45, -.1, 2.05, .7, .34, .17], [-.54, -.56, 2.17, .6, .3, .15],
+    [.75, -.85, 2.0, .92, .3, .18], [1.55, -.2, 1.85, .4, .25, .14],
+  ]
+  return <group rotation={[0.15, -0.25, 0.1]}>{landforms.map(([x, y, z, sx, sy, sz], index) => <mesh key={index} position={[x, y, z]} scale={[sx, sy, sz]} rotation={[0.1 * index, 0.18 * index, 0.2]}>
+    <sphereGeometry args={[1, 24, 16]} />
+    <meshStandardMaterial color={index % 3 === 0 ? '#567f55' : '#3f714f'} roughness={1} />
+  </mesh>)}</group>
+}
+
+function CloudBands() {
+  return <group rotation={[0.15, 0.25, 0.1]}>
+    {[[-.9, 1.9, 1.38, .8, .12, .12], [1.15, .45, 1.82, .65, .1, .1], [-1.4, -.8, 1.65, .6, .09, .1]].map(([x, y, z, sx, sy, sz], index) => <mesh key={index} position={[x, y, z]} scale={[sx, sy, sz]} rotation={[0, .3, .2]}>
+      <sphereGeometry args={[1, 24, 12]} />
+      <meshBasicMaterial color="#e8f3ff" transparent opacity={.18} />
+    </mesh>)}
+  </group>
+}
+
+function MythicDragon({ position }: { position: [number, number, number] }) {
+  return <group position={position} scale={.45} rotation={[0.1, -0.4, 0.18]}>
+    <mesh><capsuleGeometry args={[.17, .95, 8, 16]} /><meshStandardMaterial color="#2a1839" emissive="#9257e3" emissiveIntensity={.45} /></mesh>
+    <mesh position={[0, .54, .02]}><sphereGeometry args={[.23, 18, 18]} /><meshStandardMaterial color="#2a1839" roughness={.5} /></mesh>
+    <mesh position={[-.28, .1, 0]} rotation={[0, .2, -.35]}><coneGeometry args={[.5, .9, 3]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.3} /></mesh>
+    <mesh position={[.28, .1, 0]} rotation={[0, -.2, .35]}><coneGeometry args={[.5, .9, 3]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.3} /></mesh>
+    <mesh position={[-.08, .58, .2]}><sphereGeometry args={[.035, 10, 10]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[.08, .58, .2]}><sphereGeometry args={[.035, 10, 10]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+  </group>
+}
+
+function MoonSpirit({ position }: { position: [number, number, number] }) {
+  return <group position={position} scale={.32}>
+    <Float speed={1.8} floatIntensity={.4}><mesh><sphereGeometry args={[.42, 24, 24]} /><meshStandardMaterial color="#c9cdd8" emissive="#56b4ff" emissiveIntensity={.8} roughness={.45} /></mesh><mesh position={[-.12, .05, .37]}><sphereGeometry args={[.06, 10, 10]} /><meshBasicMaterial color="#24152f" /></mesh><mesh position={[.12, -.1, .37]}><sphereGeometry args={[.08, 10, 10]} /><meshBasicMaterial color="#24152f" /></mesh><pointLight intensity={2} distance={2} color="#56b4ff" /></Float>
   </group>
 }
 
