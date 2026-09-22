@@ -1,5 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
+import { useLoader } from '@react-three/fiber'
+import { TextureLoader } from 'three'
 import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
 import { defaultWorldState, exportWorldState, importWorldState, loadWorldState, resetWorldState, saveWorldState } from './worldState'
@@ -88,10 +90,6 @@ function App() {
           <Sparkles count={90} scale={[8, 6, 8]} size={1.7} speed={0.2} color="#ff9dcd" opacity={0.32} />
           <Suspense fallback={<SceneLoading label="Loading your world..." />}>
             <PlanetWorld selectedLocation={selectedLocation} onSelect={selectLocation} showPeople={showPeople} />
-            <ImportedCreature position={[-3.1, -1.55, 1.1]} />
-            <ImportedAsset path="/assets/cc0/creatures/triangulon.glb" position={[3.1, -1.3, 1.2]} scale={0.22} />
-            <ImportedAsset path="/assets/cc0/environment/crystal-cluster.glb" position={[0, -2.4, 2.4]} scale={0.35} />
-            <ImportedAsset path="/assets/cc0/nature/deer.glb" position={[2.6, 1.7, -0.8]} scale={0.24} />
             <ContactShadows position={[0, -2.95, 0]} opacity={0.35} scale={8} blur={2.8} far={4.5} color="#10071a" />
           </Suspense>
           <OrbitControls enablePan={false} minDistance={6.3} maxDistance={11} minPolarAngle={Math.PI / 3.4} maxPolarAngle={Math.PI / 1.7} autoRotate autoRotateSpeed={0.18} />
@@ -360,20 +358,7 @@ function LoveScene() {
 function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocation: LocationId; onSelect: (id: LocationId) => void; showPeople: boolean }) {
   return <group>
     <Float speed={0.7} rotationIntensity={0.08} floatIntensity={0.16}>
-      <mesh rotation={[0.15, -0.25, 0.1]}>
-        <sphereGeometry args={[2.55, 96, 96]} />
-        <meshStandardMaterial color="#164d72" roughness={0.72} metalness={0.12} />
-      </mesh>
-      <mesh scale={1.012} rotation={[0.15, -0.25, 0.1]}>
-        <sphereGeometry args={[2.55, 64, 64]} />
-        <meshBasicMaterial color="#56b4ff" transparent opacity={0.12} wireframe />
-      </mesh>
-      <mesh scale={1.025} rotation={[0.15, -0.25, 0.1]}>
-        <sphereGeometry args={[2.55, 64, 64]} />
-        <meshPhysicalMaterial color="#9fdcff" transparent opacity={0.1} roughness={0.16} metalness={0.12} transmission={0.05} clearcoat={0.7} clearcoatRoughness={0.2} />
-      </mesh>
-      <EarthLand />
-      <CloudBands />
+      <MythicEarth />
       {locations.map((location) => <LocationMarker key={location.id} location={location} selected={selectedLocation === location.id} onSelect={onSelect} />)}
       {showPeople && <Companion position={[0.1, 0.15, 2.58]} />}
       <MythicDragon position={[-2.9, 1.85, 1.1]} />
@@ -382,6 +367,24 @@ function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocat
     <mesh position={[0, 0, -0.2]} rotation={[Math.PI / 2, 0, 0]}>
       <ringGeometry args={[2.9, 3.02, 96]} />
       <meshBasicMaterial color="#ff3d9b" transparent opacity={0.12} />
+    </mesh>
+  </group>
+}
+
+function MythicEarth() {
+  const texture = useLoader(TextureLoader, '/assets/mythic-earth.svg')
+  return <group rotation={[0.15, -0.25, 0.1]}>
+    <mesh castShadow receiveShadow>
+      <sphereGeometry args={[2.55, 128, 128]} />
+      <meshStandardMaterial map={texture} roughness={0.78} metalness={0.08} />
+    </mesh>
+    <mesh scale={1.035}>
+      <sphereGeometry args={[2.55, 96, 96]} />
+      <meshBasicMaterial color="#9fe3ff" transparent opacity={0.11} side={2} />
+    </mesh>
+    <mesh scale={1.065}>
+      <sphereGeometry args={[2.55, 96, 96]} />
+      <meshBasicMaterial color="#72cfff" transparent opacity={0.09} wireframe />
     </mesh>
   </group>
 }

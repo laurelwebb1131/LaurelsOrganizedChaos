@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 1024">
+  <defs>
+    <radialGradient id="ocean" cx="46%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#2a8bb3"/>
+      <stop offset=".52" stop-color="#14516e"/>
+      <stop offset="1" stop-color="#071c34"/>
+    </radialGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a7bd79"/>
+      <stop offset=".48" stop-color="#54784c"/>
+      <stop offset="1" stop-color="#203f3c"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+  </defs>
+  <rect width="2048" height="1024" fill="url(#ocean)"/>
+  <path d="M170 250l120-92 177 18 105 105-40 103-110 35-80 130-112-40-15-112-84-74zM560 128l105-35 94 80-30 100-100-7-85-76zM820 192l174-54 182 78 36 127-91 92-150-15-76-124zM1125 420l160-58 140 72 48 150-100 115-158-35-64-115zM1465 160l210-21 127 105-71 105-136-20-87-84zM1512 548l210-12 126 120-54 144-202 14-118-110zM690 630l155-83 164 65 28 145-117 117-178-33-84-106zM290 680l176-38 137 109-61 125-196 22-114-100z" fill="url(#land)" stroke="#b8d28e" stroke-opacity=".24" stroke-width="9"/>
+  <path d="M90 322c270-110 481-106 721-25s465 88 746 7 384-54 496 5M34 756c249-76 471-61 682 17s468 98 724-4 410-68 594 4" fill="none" stroke="#e7f5ff" stroke-opacity=".22" stroke-width="35" filter="url(#soft)"/>
+  <g fill="#ff9dcd">
+    <circle cx="360" cy="325" r="7"/><circle cx="755" cy="270" r="7"/><circle cx="1150" cy="480" r="7"/><circle cx="1615" cy="260" r="7"/><circle cx="1650" cy="650" r="7"/><circle cx="820" cy="740" r="7"/>
+  </g>
+  <g fill="#c9f1ff" opacity=".7"><circle cx="366" cy="325" r="22"/><circle cx="761" cy="270" r="22"/><circle cx="1156" cy="480" r="22"/><circle cx="1621" cy="260" r="22"/><circle cx="1656" cy="650" r="22"/><circle cx="826" cy="740" r="22"/></g>
+</svg>
