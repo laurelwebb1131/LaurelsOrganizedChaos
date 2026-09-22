@@ -1,6 +1,6 @@
 # Hearthwise
 
-Hearthwise is a first working prototype of a gentle Life Operating System: a cozy dashboard for seeing the shape of today, tending small rituals, and choosing the next kind thing.
+Hearthwise is becoming a 3D Life Operating System: a personal planet where locations represent life realms, habits and goals become visible progress, and familiar characters help turn real context into thoughtful next steps.
 
 ## Run locally
 
@@ -17,8 +17,8 @@ npm run build
 
 ## Prototype scope
 
-This version uses mock data and focuses on the Today room. The sidebar rooms (Rituals, Quests, Realms, and Journal) have working navigation and intentional placeholder states, while Today includes interactive task completion, mood/energy check-in, familiar guidance, weekly rhythm, and realm overview.
+The current prototype is the first world-building slice. It includes a navigable 3D planet, selectable locations for Personal goals, Family + everyday life, Education goals, and Relationship goals, plus a selected-realm panel and a toggleable life companion. Data is still mock data; the next layer will turn each location into a real room with goals, habits, people, and AI interactions.
 
 ## Stack
 
-React, TypeScript, and Vite. Styling is plain CSS so the visual system stays easy to extend without introducing a component-library dependency.
+React, TypeScript, Vite, Three.js, React Three Fiber, and Drei. Styling remains plain CSS so the visual system stays easy to extend.

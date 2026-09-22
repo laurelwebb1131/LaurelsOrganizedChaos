@@ -2,9 +2,9 @@
 
 ## Direction
 
-**Playful Spooky Familiar** is a high-detail, friendly-gothic visual world for a life operating system. Hearthwise should feel like opening a beautifully illustrated midnight field guide: warm enough to return to, strange enough to be memorable, and always clearer than it is theatrical.
+**Playful Spooky Familiar** is a high-detail, friendly-gothic visual world for a 3D life operating system. Hearthwise should feel like stepping onto a beautifully illustrated midnight planet: warm enough to return to, strange enough to be memorable, and always clearer than it is theatrical.
 
-The interface is not a generic productivity dashboard, a Halloween theme, or a dark-mode SaaS template. It is a personal cabinet of curiosities where a crow, owl, bat, and moon act as a visual language for attention, wisdom, motion, and rest.
+The interface is not a generic productivity dashboard, a Halloween theme, or a dark-mode SaaS template. It is a personal world where a crow, owl, bat, and moon act as a visual language for attention, wisdom, motion, and rest. Locations are the primary information architecture: the user visits a place to work on a part of life.
 
 ## Color roles
 
@@ -54,12 +54,20 @@ The illustration system should have visible craft: layered feather and fur shape
 - Focus rings are silver-blue or hot pink and must remain visible on every control.
 - Motion should be purposeful: a subtle familiar blink/float, a moon phase shift, and a single authored page entrance. Respect `prefers-reduced-motion`.
 
+## 3D world contract
+
+- The planet is the home screen and the user's life map.
+- Locations are meaningful, selectable destinations rather than decorative points.
+- The camera supports orbit and zoom but never loses the planet or its orientation.
+- The current location is always explained in plain language outside the canvas.
+- Characters are a future interaction layer: grounded in real relationships and user-provided context, never fabricated as claims about real people.
+
 ## Layout contract
 
-- Desktop: fixed dark navigation rail, spacious content canvas, two-column Today composition.
-- Tablet: narrower rail, single-column content where cards would become cramped.
-- Mobile: compact header, stacked cards, no horizontal scrolling, all primary actions reachable with a thumb.
-- The first viewport must show: date/moon context, daily pulse, next actions, one check-in, and one familiar nudge.
+- Desktop: full-bleed world canvas, quiet navigation rail, and selected-location panel.
+- Tablet: preserve the planet as the dominant surface and move location details into a lower sheet.
+- Mobile: compact navigation dock, responsive canvas, no horizontal scrolling, all location actions reachable with a thumb.
+- The first viewport must show: moon/date context, the planet, four life locations, the current realm, and one companion toggle.
 
 ## Quality bar
 

@@ -1,206 +1,133 @@
+import { Canvas } from '@react-three/fiber'
+import { Float, Html, OrbitControls, Stars, Text } from '@react-three/drei'
 import { useState } from 'react'
+import './styles.css'
 
-type IconName = 'today' | 'rituals' | 'quests' | 'realms' | 'journal'
+type LocationId = 'library' | 'home' | 'university' | 'love-doctor'
 
-const navigation: { label: string; icon: IconName }[] = [
-  { label: 'Today', icon: 'today' },
-  { label: 'Rituals', icon: 'rituals' },
-  { label: 'Quests', icon: 'quests' },
-  { label: 'Realms', icon: 'realms' },
-  { label: 'Journal', icon: 'journal' },
-]
+type Location = {
+  id: LocationId
+  name: string
+  domain: string
+  description: string
+  icon: string
+  color: string
+  position: [number, number, number]
+}
 
-const initialTasks = [
-  { label: 'Water the kitchen herbs', meta: 'Home · 10 min', done: true },
-  { label: 'Send the project follow-up', meta: 'Work · 20 min', done: false },
-  { label: 'Pick up oat milk', meta: 'Errand · Before 6pm', done: false },
-  { label: 'Five pages of The Night Circus', meta: 'Self · 15 min', done: false },
+const locations: Location[] = [
+  { id: 'library', name: 'The Library', domain: 'Personal goals', description: 'Ideas, intentions, and the next chapter you are writing.', icon: '✦', color: '#ff3d9b', position: [-1.3, 1.65, 1.55] },
+  { id: 'home', name: 'Hearth House', domain: 'Family + everyday life', description: 'Responsibilities, routines, and the people who make home home.', icon: '⌂', color: '#56b4ff', position: [1.65, 0.45, 1.55] },
+  { id: 'university', name: 'The University', domain: 'Education goals', description: 'Courses, curiosity, practice, and the skills you want to carry forward.', icon: '◇', color: '#9257e3', position: [-1.45, -1.1, 1.9] },
+  { id: 'love-doctor', name: 'The Love Doctor', domain: 'Relationship goals', description: 'A thoughtful room for connection, communication, and care.', icon: '♡', color: '#ff9dcd', position: [1.45, -1.3, 1.8] },
 ]
 
 function App() {
-  const [activePage, setActivePage] = useState<IconName>('today')
-  const [tasks, setTasks] = useState(initialTasks)
-  const [mood, setMood] = useState('steady')
-  const [notice, setNotice] = useState('')
-
-  const toggleTask = (index: number) => {
-    setTasks((current) =>
-      current.map((task, taskIndex) => (taskIndex === index ? { ...task, done: !task.done } : task)),
-    )
-  }
-
-  const chooseMood = (value: string) => {
-    setMood(value)
-    setNotice('Check-in held. Your familiar is listening.')
-    window.setTimeout(() => setNotice(''), 2800)
-  }
-
-  const completedTasks = tasks.filter((task) => task.done).length
+  const [selectedLocation, setSelectedLocation] = useState<LocationId>('library')
+  const [showPeople, setShowPeople] = useState(true)
+  const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand-lockup">
-          <div className="brand-mark" aria-hidden="true"><span>☾</span></div>
-          <div>
-            <strong>Hearthwise</strong>
-            <span>life, held lightly</span>
-          </div>
-        </div>
+    <div className="world-app">
+      <div className="world-canvas">
+        <Canvas camera={{ position: [0, 0.5, 8.8], fov: 38 }} dpr={[1, 2]}>
+          <color attach="background" args={['#08080b']} />
+          <fog attach="fog" args={['#08080b', 8, 15]} />
+          <ambientLight intensity={1.2} color="#b9b0cb" />
+          <directionalLight position={[4, 6, 5]} intensity={4.2} color="#fff1fb" />
+          <pointLight position={[-4, 2, 4]} intensity={12} distance={9} color="#ff3d9b" />
+          <pointLight position={[4, -3, 2]} intensity={8} distance={8} color="#56b4ff" />
+          <Stars radius={80} depth={35} count={1800} factor={2.1} saturation={0.5} fade speed={0.4} />
+          <PlanetWorld selectedLocation={selectedLocation} onSelect={setSelectedLocation} showPeople={showPeople} />
+          <OrbitControls enablePan={false} minDistance={6.3} maxDistance={11} minPolarAngle={Math.PI / 3.4} maxPolarAngle={Math.PI / 1.7} autoRotate autoRotateSpeed={0.18} />
+        </Canvas>
+      </div>
 
-        <div className="profile-chip">
-          <div className="avatar"><span>♣</span></div>
-          <div><strong>Laurel Webb</strong><span>Tuesday, Oct 24</span></div>
-          <button className="dots-button" aria-label="Open profile menu">•••</button>
-        </div>
+      <header className="world-header">
+        <div className="world-brand"><span className="brand-sigil">☾</span><div><strong>Hearthwise</strong><small>your life, in orbit</small></div></div>
+        <div className="world-status"><span className="status-pulse" /> WORLD ONLINE <b>·</b> TUESDAY, OCT 24</div>
+        <button className="profile-button"><span className="profile-orb">LW</span><span className="profile-name">Laurel Webb</span><span>⌄</span></button>
+      </header>
 
-        <nav className="primary-nav" aria-label="Main navigation">
-          <p className="nav-heading">Your hearth</p>
-          {navigation.map((item) => (
-            <button
-              className={`nav-item ${activePage === item.icon ? 'active' : ''}`}
-              key={item.icon}
-              onClick={() => setActivePage(item.icon)}
-            >
-              <NavIcon name={item.icon} />
-              <span>{item.label}</span>
-              {item.icon === 'today' && <span className="nav-count">3</span>}
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-foot">
-          <div className="streak-card">
-            <div className="streak-flame">☽</div>
-            <div><strong>7 day tending streak</strong><span>Small steps make a life.</span></div>
-          </div>
-          <button className="settings-link"><span>⚙</span> Preferences</button>
-          <div className="version">HEARTHWISE · BETA</div>
-        </div>
+      <aside className="world-nav">
+        <div className="nav-kicker">YOUR WORLD</div>
+        <button className="nav-tab active"><span>◎</span> Planet view</button>
+        <button className="nav-tab"><span>♧</span> Daily orbit <b>3</b></button>
+        <button className="nav-tab"><span>✧</span> Milestones</button>
+        <button className="nav-tab"><span>☽</span> Night journal</button>
+        <div className="nav-divider" />
+        <div className="nav-kicker">WORLD SETTINGS</div>
+        <button className="nav-tab"><span>⚙</span> Customize world</button>
+        <button className="nav-tab"><span>⌘</span> Invite a familiar</button>
+        <div className="nav-foot"><span className="tiny-moon">◐</span><div><strong>Waning moon</strong><small>Good night for tending</small></div></div>
       </aside>
 
-      <main className="main-content">
-        <header className="topbar">
-          <button className="mobile-brand" onClick={() => setActivePage('today')}><span>☾</span> Hearthwise</button>
-          <div className="breadcrumb"><span>Hearth</span><b>/</b><strong>{navigation.find((item) => item.icon === activePage)?.label}</strong></div>
-          <div className="top-actions">
-            <button className="icon-button notification-button" aria-label="Notifications"><span>♢</span><i /></button>
-            <button className="date-button"><span className="calendar-icon">▣</span> This week <span className="chevron">⌄</span></button>
-          </div>
-        </header>
+      <section className="world-copy">
+        <div className="copy-kicker"><span>✦</span> TUESDAY · WANING MOON</div>
+        <h1>Welcome back,<br /><em>Laurel.</em></h1>
+        <p>This is your world. Every place holds a part of the life you are making.</p>
+        <div className="orbit-line"><span /><b>4</b> realms active <i /> <b>7</b> day streak</div>
+      </section>
 
-        <div className="content-wrap">
-          <section className="welcome-row">
-            <div className="ambient-moon-art" aria-hidden="true"><span className="tiny-star star-one">✦</span><span className="tiny-star star-two">✧</span><span className="bat-mark">⌁</span></div>
-            <div>
-              <p className="eyebrow"><span className="eyebrow-star">✦</span> TUESDAY, OCTOBER 24 · WANING MOON</p>
-              <h1>Good morning, Laurel.</h1>
-              <p className="welcome-copy">There is room for what matters today.</p>
-            </div>
-            <div className="moon-orb" aria-label="Waning moon phase"><span>☾</span><i>quiet<br />moon</i><b>✦</b></div>
-          </section>
+      <section className="location-panel">
+        <div className="panel-topline"><span className="panel-label">SELECTED REALM</span><button className="close-button" onClick={() => setSelectedLocation('library')}>×</button></div>
+        <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
+        <p>{active.description}</p>
+        <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
+        <button className="enter-button" onClick={() => window.alert(`${active.name} is the next room to build.`)}>Enter {active.name} <span>↗</span></button>
+        <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
+      </section>
 
-          {activePage !== 'today' ? (
-            <section className="placeholder-page">
-              <div className="placeholder-icon">{navigation.find((item) => item.icon === activePage)?.label === 'Journal' ? '✎' : '✦'}</div>
-              <h2>{navigation.find((item) => item.icon === activePage)?.label}</h2>
-              <p>This room is being prepared. For now, your Today hearth has everything you need to tend the day.</p>
-              <button className="primary-button" onClick={() => setActivePage('today')}>Return to Today <span>→</span></button>
-            </section>
-          ) : (
-            <>
-              <section className="pulse-strip">
-                <div className="pulse-intro"><span className="signal-dot" /> <strong>Today’s pulse</strong><span className="pulse-divider" /> <span>Mostly clear with a chance of brave.</span></div>
-                <div className="pulse-metrics">
-                  <span><b>3</b> priorities</span><span><b>1</b> ritual due</span><span><b>{completedTasks}/4</b> tended</span>
-                </div>
-              </section>
-
-              <div className="dashboard-grid">
-                <section className="panel tasks-panel today-tasks">
-                  <div className="panel-heading">
-                    <div><h2>On your plate</h2><p>Keep it close. Keep it kind.</p></div>
-                    <button className="text-button" onClick={() => setNotice('A new task can be added from your Quests room.')}>View all <span>→</span></button>
-                  </div>
-                  <div className="task-list">
-                    {tasks.map((task, index) => (
-                      <button className={`task-row ${task.done ? 'complete' : ''}`} key={task.label} onClick={() => toggleTask(index)}>
-                        <span className="task-check">{task.done ? '✓' : ''}</span>
-                        <span className="task-content"><strong>{task.label}</strong><small>{task.meta}</small></span>
-                        <span className="task-arrow">›</span>
-                      </button>
-                    ))}
-                  </div>
-                  <button className="add-task" onClick={() => setNotice('A new task can be added from your Quests room.')}> <span>＋</span> Add a little something</button>
-                </section>
-
-                <section className="panel familiar-panel lead-familiar">
-                  <div className="familiar-top"><span className="familiar-label"><span>✦</span> Your familiar · Juniper</span><span className="online-dot">● here</span></div>
-                  <div className="familiar-message"><div className="familiar-avatar" aria-hidden="true"><div className="ear left" /><div className="ear right" /><span>☾</span></div><div><h2>A gentle nudge</h2><p>“You’ve got a lot of open loops, love. What if the project follow-up is the one thread you pull before lunch?”</p><button className="link-button" onClick={() => setNotice('That thread has been marked as your next brave thing.')}>Make it my next brave thing <span>→</span></button></div></div>
-                  <CrowIllustration />
-                  <div className="familiar-footer"><span>Based on your energy + priorities</span><button aria-label="Get another nudge" onClick={() => setNotice('Juniper is shuffling the leaves...')}>↻</button></div>
-                </section>
-
-                <section className="panel checkin-panel">
-                  <div className="panel-heading"><div><h2>How are you arriving?</h2><p>No wrong answers here.</p></div><span className="checkin-sun">☼</span></div>
-                  <div className="mood-options">
-                    {[['low', '☁', 'Low'], ['tender', '◒', 'Tender'], ['steady', '◑', 'Steady'], ['bright', '☀', 'Bright']].map(([value, icon, label]) => (
-                      <button className={`mood-option ${mood === value ? 'selected' : ''}`} key={value} onClick={() => chooseMood(value)}><span>{icon}</span><small>{label}</small></button>
-                    ))}
-                  </div>
-                  <div className="energy-line"><span>Energy</span><div className="energy-track"><i /></div><b>7<span>/10</span></b></div>
-                </section>
-
-                <section className="panel progress-panel">
-                  <div className="panel-heading"><div><h2>Week in the making</h2><p>Your rhythm, not a report card.</p></div><button className="more-button" aria-label="More weekly stats">•••</button></div>
-                  <div className="week-chart">
-                    <div className="chart-bars"><span style={{height: '32%'}} /><span style={{height: '47%'}} /><span style={{height: '41%'}} /><span className="today-bar" style={{height: '72%'}} /><span style={{height: '56%'}} /><span style={{height: '23%'}} /><span style={{height: '12%'}} /></div>
-                    <div className="chart-days"><span>M</span><span>T</span><span>W</span><span className="today-label">T</span><span>F</span><span>S</span><span>S</span></div>
-                  </div>
-                  <div className="progress-stat"><strong>68%</strong><span>of your rituals tended this week</span><em>↑ 12%</em></div>
-                </section>
-
-                <section className="panel realms-panel">
-                  <div className="panel-heading"><div><h2>Your realms</h2><p>A little care, everywhere.</p></div><button className="text-button" onClick={() => setActivePage('realms')}>Open map <span>→</span></button></div>
-                  <div className="realm-list">
-                    <Realm icon="⌂" name="Home" value="4 of 6" color="moss" width="66%" />
-                    <Realm icon="✧" name="Self" value="2 of 4" color="amber" width="50%" />
-                    <Realm icon="◌" name="Work" value="3 of 5" color="plum" width="60%" />
-                  </div>
-                </section>
-              </div>
-            </>
-          )}
-          {notice && <div className="toast" role="status"><span>✦</span>{notice}</div>}
-        </div>
-      </main>
+      <div className="world-legend"><span><i className="legend-pink" /> PERSONAL</span><span><i className="legend-blue" /> DAILY LIFE</span><span><i className="legend-purple" /> GROWTH</span></div>
+      <div className="zoom-hint">DRAG TO ROTATE <b>·</b> SCROLL TO ZOOM</div>
     </div>
   )
 }
 
-function Realm({ icon, name, value, color, width }: { icon: string; name: string; value: string; color: string; width: string }) {
-  return <div className="realm-row"><span className={`realm-icon ${color}`}>{icon}</span><strong>{name}</strong><div className="realm-track"><i className={color} style={{width}} /></div><small>{value}</small></div>
+function PlanetWorld({ selectedLocation, onSelect, showPeople }: { selectedLocation: LocationId; onSelect: (id: LocationId) => void; showPeople: boolean }) {
+  return <group>
+    <Float speed={0.7} rotationIntensity={0.08} floatIntensity={0.16}>
+      <mesh rotation={[0.15, -0.25, 0.1]}>
+        <sphereGeometry args={[2.55, 96, 96]} />
+        <meshStandardMaterial color="#24202f" roughness={0.82} metalness={0.18} />
+      </mesh>
+      <mesh scale={1.02}>
+        <sphereGeometry args={[2.55, 64, 64]} />
+        <meshBasicMaterial color="#9257e3" transparent opacity={0.06} wireframe />
+      </mesh>
+      {locations.map((location) => <LocationMarker key={location.id} location={location} selected={selectedLocation === location.id} onSelect={onSelect} />)}
+      {showPeople && <Companion position={[0.1, 0.15, 2.58]} />}
+    </Float>
+    <mesh position={[0, 0, -0.2]} rotation={[Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[2.9, 3.02, 96]} />
+      <meshBasicMaterial color="#ff3d9b" transparent opacity={0.12} />
+    </mesh>
+  </group>
 }
 
-function CrowIllustration() {
-  return <svg className="crow-art" viewBox="0 0 210 122" role="img" aria-label="Juniper the crow perched beneath a moon">
-    <circle cx="165" cy="27" r="21" fill="none" stroke="var(--silver)" strokeWidth="1.2" opacity=".8" />
-    <circle cx="172" cy="21" r="19" fill="var(--ink-plum)" />
-    <path d="M34 101c34-12 79-13 141-4" fill="none" stroke="var(--silver)" strokeWidth="3" strokeLinecap="round" opacity=".9" />
-    <path d="M67 91c-5-18-1-38 12-49 11-9 28-9 39 1 11 9 14 25 8 39-7 16-25 23-43 18Z" fill="var(--black)" stroke="var(--silver)" strokeWidth="1.3" />
-    <path d="M85 43c4-12 15-18 27-15l18 10-16 4-10-4m-26 8c-8 1-17-2-24-8l13 15m55 17 20 11-19-1m-7 5 7 19m-22-21-3 21" fill="none" stroke="var(--silver)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M95 49c6-5 16-6 23-1m-25 10c9 4 18 4 28-1m-31 12c10 4 20 4 30-1m-27 12c8 3 15 3 23-1" fill="none" stroke="var(--purple)" strokeWidth="1.5" strokeLinecap="round" opacity=".9" />
-    <path d="M83 43 73 29l18 8m20 1 11-15-2 19" fill="none" stroke="var(--hot-pink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="106" cy="44" r="2.8" fill="var(--hot-pink)" />
-    <path d="M109 48c5 2 9 2 13 0" fill="none" stroke="var(--hot-pink)" strokeWidth="1.2" strokeLinecap="round" />
-    <path d="M27 101c10-15 14-20 22-28m-8 28c4-12 8-17 14-23" fill="none" stroke="var(--purple)" strokeWidth="1.1" strokeLinecap="round" />
-    <circle cx="47" cy="29" r="1.7" fill="var(--hot-pink)" /><circle cx="62" cy="18" r="1.2" fill="var(--blue)" />
-  </svg>
+function LocationMarker({ location, selected, onSelect }: { location: Location; selected: boolean; onSelect: (id: LocationId) => void }) {
+  return <group position={location.position} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
+    <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.2}>
+      <mesh>
+        <icosahedronGeometry args={[selected ? 0.32 : 0.25, 2]} />
+        <meshStandardMaterial color={location.color} emissive={location.color} emissiveIntensity={selected ? 1.8 : 0.8} roughness={0.3} metalness={0.35} />
+      </mesh>
+      {selected && <mesh scale={1.55}><ringGeometry args={[0.32, 0.36, 32]} /><meshBasicMaterial color={location.color} transparent opacity={0.55} /></mesh>}
+      <Text position={[0, -0.56, 0]} fontSize={0.13} color="#c9cdd8" anchorX="center" anchorY="middle">{location.name}</Text>
+      <Html center position={[0, 0.02, 0.05]} distanceFactor={7} style={{ color: '#111118', fontSize: 12, fontWeight: 700, pointerEvents: 'none' }}>{location.icon}</Html>
+    </Float>
+  </group>
 }
 
-function NavIcon({ name }: { name: IconName }) {
-  const icons: Record<IconName, string> = { today: '⌂', rituals: '◒', quests: '✧', realms: '◎', journal: '✎' }
-  return <span className="nav-icon">{icons[name]}</span>
+function Companion({ position }: { position: [number, number, number] }) {
+  return <group position={position} scale={0.65}>
+    <mesh position={[0, 0.38, 0]}><sphereGeometry args={[0.27, 24, 24]} /><meshStandardMaterial color="#111118" roughness={0.55} /></mesh>
+    <mesh position={[0, -0.05, 0]}><capsuleGeometry args={[0.22, 0.48, 8, 16]} /><meshStandardMaterial color="#111118" roughness={0.62} /></mesh>
+    <mesh position={[-0.1, 0.63, 0]} rotation={[0, 0, -0.35]}><coneGeometry args={[0.11, 0.34, 4]} /><meshStandardMaterial color="#111118" /></mesh>
+    <mesh position={[0.1, 0.63, 0]} rotation={[0, 0, 0.35]}><coneGeometry args={[0.11, 0.34, 4]} /><meshStandardMaterial color="#111118" /></mesh>
+    <mesh position={[-0.1, 0.42, 0.24]}><sphereGeometry args={[0.035, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+    <mesh position={[0.1, 0.42, 0.24]}><sphereGeometry args={[0.035, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
+  </group>
 }
 
 export default App
