@@ -41,7 +41,7 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-lockup">
-          <div className="brand-mark" aria-hidden="true"><span>✦</span></div>
+          <div className="brand-mark" aria-hidden="true"><span>☾</span></div>
           <div>
             <strong>Hearthwise</strong>
             <span>life, held lightly</span>
@@ -49,7 +49,7 @@ function App() {
         </div>
 
         <div className="profile-chip">
-          <div className="avatar">LW</div>
+          <div className="avatar"><span>♣</span></div>
           <div><strong>Laurel Webb</strong><span>Tuesday, Oct 24</span></div>
           <button className="dots-button" aria-label="Open profile menu">•••</button>
         </div>
@@ -71,7 +71,7 @@ function App() {
 
         <div className="sidebar-foot">
           <div className="streak-card">
-            <div className="streak-flame">♨</div>
+            <div className="streak-flame">☽</div>
             <div><strong>7 day tending streak</strong><span>Small steps make a life.</span></div>
           </div>
           <button className="settings-link"><span>⚙</span> Preferences</button>
@@ -81,7 +81,7 @@ function App() {
 
       <main className="main-content">
         <header className="topbar">
-          <button className="mobile-brand" onClick={() => setActivePage('today')}><span>✦</span> Hearthwise</button>
+          <button className="mobile-brand" onClick={() => setActivePage('today')}><span>☾</span> Hearthwise</button>
           <div className="breadcrumb"><span>Hearth</span><b>/</b><strong>{navigation.find((item) => item.icon === activePage)?.label}</strong></div>
           <div className="top-actions">
             <button className="icon-button notification-button" aria-label="Notifications"><span>♢</span><i /></button>
@@ -91,12 +91,13 @@ function App() {
 
         <div className="content-wrap">
           <section className="welcome-row">
+            <div className="ambient-moon-art" aria-hidden="true"><span className="tiny-star star-one">✦</span><span className="tiny-star star-two">✧</span><span className="bat-mark">⌁</span></div>
             <div>
               <p className="eyebrow"><span className="eyebrow-star">✦</span> TUESDAY, OCTOBER 24 · WANING MOON</p>
               <h1>Good morning, Laurel.</h1>
               <p className="welcome-copy">There is room for what matters today.</p>
             </div>
-            <div className="moon-orb" aria-label="Waning moon phase"><span>☾</span><i>quiet<br />moon</i></div>
+            <div className="moon-orb" aria-label="Waning moon phase"><span>☾</span><i>quiet<br />moon</i><b>✦</b></div>
           </section>
 
           {activePage !== 'today' ? (
@@ -136,6 +137,7 @@ function App() {
                 <section className="panel familiar-panel">
                   <div className="familiar-top"><span className="familiar-label"><span>✦</span> Your familiar · Juniper</span><span className="online-dot">● here</span></div>
                   <div className="familiar-message"><div className="familiar-avatar" aria-hidden="true"><div className="ear left" /><div className="ear right" /><span>☾</span></div><div><h2>A gentle nudge</h2><p>“You’ve got a lot of open loops, love. What if the project follow-up is the one thread you pull before lunch?”</p><button className="link-button" onClick={() => setNotice('That thread has been marked as your next brave thing.')}>Make it my next brave thing <span>→</span></button></div></div>
+                  <CrowIllustration />
                   <div className="familiar-footer"><span>Based on your energy + priorities</span><button aria-label="Get another nudge" onClick={() => setNotice('Juniper is shuffling the leaves...')}>↻</button></div>
                 </section>
 
@@ -178,6 +180,18 @@ function App() {
 
 function Realm({ icon, name, value, color, width }: { icon: string; name: string; value: string; color: string; width: string }) {
   return <div className="realm-row"><span className={`realm-icon ${color}`}>{icon}</span><strong>{name}</strong><div className="realm-track"><i className={color} style={{width}} /></div><small>{value}</small></div>
+}
+
+function CrowIllustration() {
+  return <svg className="crow-art" viewBox="0 0 180 100" role="img" aria-label="A crow perched beneath a moon">
+    <circle cx="143" cy="25" r="18" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <circle cx="149" cy="20" r="16" fill="var(--ink-plum)" />
+    <path d="M35 79c28-9 42-4 59 1 20 6 38 4 57-9M56 76c-4-22 4-39 22-42 15-3 27 8 28 21 1 15-9 24-28 25-8 1-16-1-22-4Z" fill="currentColor" opacity=".95" />
+    <path d="M78 40c5-9 15-14 25-9l12 8-10 3-8-2m-18 1 11-12 1 16M65 51l-17-8 10 14m65 12-10 16m-2-17 15 12m-37-9 4 16" fill="none" stroke="var(--hot-pink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="98" cy="45" r="2" fill="var(--hot-pink)" />
+    <path d="M18 89h146" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    <path d="M27 88c7-17 11-19 16-25m-5 24c4-14 7-19 12-24" fill="none" stroke="currentColor" strokeWidth="1.3" />
+  </svg>
 }
 
 function NavIcon({ name }: { name: IconName }) {
