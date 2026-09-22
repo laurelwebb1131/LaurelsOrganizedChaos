@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
-import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text } from '@react-three/drei'
-import { useState } from 'react'
+import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
+import { Suspense, useState } from 'react'
 import './styles.css'
 
 type LocationId = 'library' | 'home' | 'university' | 'love-doctor'
@@ -42,8 +42,11 @@ function App() {
           <pointLight position={[4, -3, 2]} intensity={11} distance={8} color="#56b4ff" />
           <Stars radius={80} depth={35} count={1800} factor={2.1} saturation={0.5} fade speed={0.4} />
           <Sparkles count={90} scale={[8, 6, 8]} size={1.7} speed={0.2} color="#ff9dcd" opacity={0.32} />
-          <PlanetWorld selectedLocation={selectedLocation} onSelect={setSelectedLocation} showPeople={showPeople} />
-          <ContactShadows position={[0, -2.95, 0]} opacity={0.35} scale={8} blur={2.8} far={4.5} color="#10071a" />
+          <Suspense fallback={null}>
+            <PlanetWorld selectedLocation={selectedLocation} onSelect={setSelectedLocation} showPeople={showPeople} />
+            <ImportedCreature position={[-3.1, -1.55, 1.1]} />
+            <ContactShadows position={[0, -2.95, 0]} opacity={0.35} scale={8} blur={2.8} far={4.5} color="#10071a" />
+          </Suspense>
           <OrbitControls enablePan={false} minDistance={6.3} maxDistance={11} minPolarAngle={Math.PI / 3.4} maxPolarAngle={Math.PI / 1.7} autoRotate autoRotateSpeed={0.18} />
         </Canvas>
       </div>
@@ -202,6 +205,13 @@ function MoonSpirit({ position }: { position: [number, number, number] }) {
     </Float>
   </group>
 }
+
+function ImportedCreature({ position }: { position: [number, number, number] }) {
+  const { scene } = useGLTF('/assets/creatures/cc0-spider.glb')
+  return <primitive object={scene.clone()} position={position} scale={0.28} rotation={[0, 0.6, 0]} />
+}
+
+useGLTF.preload('/assets/creatures/cc0-spider.glb')
 
 function LocationMarker({ location, selected, onSelect }: { location: Location; selected: boolean; onSelect: (id: LocationId) => void }) {
   return <group position={location.position} onClick={(event) => { event.stopPropagation(); onSelect(location.id) }}>
