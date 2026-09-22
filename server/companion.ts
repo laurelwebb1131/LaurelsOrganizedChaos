@@ -5,6 +5,7 @@ const maxFieldLength = 1200
 const requestWindowMs = 60_000
 const requestLimit = 20
 const requestCounts = new Map<string, { startedAt: number; count: number }>()
+const allowedOrigins = new Set((process.env.HEARTHWISE_ALLOWED_ORIGINS ?? '').split(',').map((origin) => origin.trim()).filter(Boolean))
 
 export type CompanionRequest = {
   companionName: string
@@ -25,6 +26,12 @@ export function handleHealth(_request: IncomingMessage, response: ServerResponse
 export async function handleCompanion(request: IncomingMessage, response: ServerResponse) {
   const requestId = randomUUID()
   response.setHeader('X-Request-Id', requestId)
+  const origin = request.headers.origin
+  if (origin && allowedOrigins.size > 0 && !allowedOrigins.has(origin)) {
+    writeJson(response, 403, { error: 'Origin not allowed', requestId })
+    return
+  }
+  if (origin && allowedOrigins.size > 0) response.setHeader('Access-Control-Allow-Origin', origin)
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
     writeJson(response, 405, { error: 'Method not allowed' })
@@ -33,6 +40,7 @@ export async function handleCompanion(request: IncomingMessage, response: Server
   const clientKey = request.headers['x-forwarded-for']?.toString().split(',')[0].trim() ?? request.socket.remoteAddress ?? 'unknown'
   const now = Date.now()
   const existing = requestCounts.get(clientKey)
+  for (const [key, bucket] of requestCounts) if (now - bucket.startedAt >= requestWindowMs) requestCounts.delete(key)
   const window = existing && now - existing.startedAt < requestWindowMs ? existing : { startedAt: now, count: 0 }
   window.count += 1
   requestCounts.set(clientKey, window)
@@ -111,6 +119,8 @@ function validateRequest(value: unknown): CompanionRequest {
     if (typeof body[field] !== 'string' || !body[field]) throw new Error(`${field} is required`)
     if ((body[field] as string).length > maxFieldLength) throw new Error(`${field} is too long`)
   }
+  if (body.goals !== undefined && !Array.isArray(body.goals)) throw new Error('goals must be an array')
+  if (body.habits !== undefined && !Array.isArray(body.habits)) throw new Error('habits must be an array')
   return body as CompanionRequest
 }
 

@@ -37,3 +37,16 @@ test('companion endpoint validates JSON', async () => {
   assert.equal(response.status, 400)
   assert.match(response.body, /companionName is required/)
 })
+
+test('companion endpoint rejects malformed nested state', async () => {
+  const response = await request('/api/companion', 'POST', JSON.stringify({
+    companionName: 'Juniper',
+    companionRole: 'Guide',
+    companionContext: 'Context',
+    realm: 'The Library',
+    userMessage: 'Help',
+    goals: 'not-an-array',
+  }))
+  assert.equal(response.status, 400)
+  assert.match(response.body, /goals must be an array/)
+})

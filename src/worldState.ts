@@ -78,7 +78,11 @@ export function loadWorldState(): SavedWorldState {
 }
 
 export function saveWorldState(state: SavedWorldState) {
-  window.localStorage.setItem(storageKey, JSON.stringify(state))
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(state))
+  } catch {
+    throw new Error('Hearthwise could not save this world. Export your world data before continuing.')
+  }
 }
 
 export function exportWorldState(state: SavedWorldState) {
@@ -89,4 +93,12 @@ export function resetWorldState() {
   window.localStorage.removeItem(storageKey)
   window.localStorage.removeItem('hearthwise-world-v1')
   return defaultWorldState
+}
+
+export function importWorldState(raw: string): SavedWorldState {
+  const parsed = JSON.parse(raw) as Partial<SavedWorldState>
+  if (parsed.version !== 2 || !Array.isArray(parsed.companions) || !Array.isArray(parsed.goals) || !Array.isArray(parsed.habits)) {
+    throw new Error('This world file is not a supported Hearthwise export.')
+  }
+  return { ...defaultWorldState, ...parsed, version: 2 } as SavedWorldState
 }

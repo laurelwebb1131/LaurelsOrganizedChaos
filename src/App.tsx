@@ -2,7 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
 import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
-import { defaultWorldState, exportWorldState, loadWorldState, resetWorldState, saveWorldState } from './worldState'
+import { defaultWorldState, exportWorldState, importWorldState, loadWorldState, resetWorldState, saveWorldState } from './worldState'
 import type { Companion } from './worldState'
 import { requestCompanionReply } from './companionProvider'
 
@@ -38,7 +38,8 @@ function App() {
     return value === 'library' || value === 'home' ? value : null
   })
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
-  useEffect(() => { saveWorldState(worldState) }, [worldState])
+  const [storageError, setStorageError] = useState('')
+  useEffect(() => { try { saveWorldState(worldState); setStorageError('') } catch (error) { setStorageError(error instanceof Error ? error.message : 'World could not be saved.') } }, [worldState])
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key === 'hearthwise-world-v2') setWorldState(loadWorldState())
@@ -118,7 +119,8 @@ function App() {
           link.href = url; link.download = 'hearthwise-world.json'; link.click(); URL.revokeObjectURL(url)
         }}><span>⇩</span> Export world</button>
         <button className="nav-tab" onClick={() => {
-          if (window.confirm('Reset your local Hearthwise world? This cannot be undone.')) setWorldState(resetWorldState())
+          const phrase = window.prompt('Type RESET WORLD to erase this local world.')
+          if (phrase === 'RESET WORLD') setWorldState(resetWorldState())
         }}><span>↺</span> Reset world</button>
         <button className="nav-tab" onClick={() => setShowCodex(true)}><span>⌘</span> Invite a familiar</button>
         <div className="nav-foot"><span className="tiny-moon">◐</span><div><strong>Waning moon</strong><small>Good night for tending</small></div></div>
@@ -143,6 +145,7 @@ function App() {
       <div className="world-legend"><span><i className="legend-pink" /> PERSONAL</span><span><i className="legend-blue" /> DAILY LIFE</span><span><i className="legend-purple" /> GROWTH</span></div>
       <div className="zoom-hint">DRAG TO ROTATE <b>·</b> SCROLL TO ZOOM</div>
       {showCodex && <CompanionCodex companions={worldState.companions} onClose={() => setShowCodex(false)} onAdd={(companion) => setWorldState((state) => ({ ...state, companions: [...state.companions, companion] }))} />}
+      {storageError && <div className="storage-alert" role="alert">{storageError}</div>}
     </div>
   )
 }
@@ -158,6 +161,11 @@ function CompanionCodex({ companions, onClose, onAdd }: { companions: Companion[
     onAdd({ id: `${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`, name: name.trim(), role: role.trim(), realm, context: context.trim() || 'No context added yet.' })
     setName(''); setRole(''); setContext(''); setAdding(false)
   }
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
   return <div className="codex-scrim" role="presentation" onClick={onClose}><section className="codex-panel" role="dialog" aria-modal="true" aria-labelledby="codex-title" onClick={(event) => event.stopPropagation()}>
     <div className="codex-header"><div><span className="panel-label">YOUR WORLD · PEOPLE + FAMILIARS</span><h2 id="codex-title">Companion Codex</h2></div><button className="close-button" onClick={onClose} aria-label="Close companion codex">×</button></div>
     <p className="codex-intro">Give the people and guides in your life a place in Hearthwise. You choose what is remembered; nothing is inferred.</p>
