@@ -1,15 +1,66 @@
-# Hearthwise visual direction
+# Hearthwise design system
 
-Hearthwise is a life operating system for people who want structure without self-punishment. The Today surface is an **Operate** dashboard dressed as a midnight familiar's study: the interface should feel mysterious, detailed, and alive without sacrificing the next obvious action.
+## Direction
 
-## Visual system
+**Playful Spooky Familiar** is a high-detail, friendly-gothic visual world for a life operating system. Hearthwise should feel like opening a beautifully illustrated midnight field guide: warm enough to return to, strange enough to be memorable, and always clearer than it is theatrical.
 
-- **Foundation:** near-black `#09090c` and ink `#111116` surfaces, with deep plum used as the atmospheric room color.
-- **Signals:** hot pink `#ff3e9e` is the primary action and completion signal; purple `#8d53de` adds ritual depth; electric blue `#4da7ff` marks lunar/energy data; silver `#c6cad5` is the cool text and moonlight.
-- **Type:** Fraunces gives headings a tactile, bookish voice; DM Sans keeps controls compact and readable.
-- **Shape:** 9–15px rounded work surfaces, thin violet borders, restrained shadows, and atmospheric radial light instead of glossy glass.
-- **Signature:** Juniper, the familiar, translates dashboard state into a short compassionate nudge while a perched crow, moon, stars, and bat marks make the dashboard unmistakably Laurel's.
+The interface is not a generic productivity dashboard, a Halloween theme, or a dark-mode SaaS template. It is a personal cabinet of curiosities where a crow, owl, bat, and moon act as a visual language for attention, wisdom, motion, and rest.
 
-## Composition
+## Color roles
 
-The navigation remains a black vertical “hearth” on desktop and collapses to a compact wordmark on mobile. The first viewport leads with the actual shape of the day: pulse, tasks, check-in, familiar guidance, rhythm, and realms. Interactions are deliberately small and reversible: tasks toggle, mood selection confirms with a toast, and room navigation gives honest prototype states. Illustration should prefer crisp, high-detail silhouette and line-work motifs over generic emoji decoration.
+Use color by role, not decoration:
+
+| Role | Token | Use |
+| --- | --- | --- |
+| Void | `#08080B` | App shell, page edges, deepest contrast |
+| Ink | `#111118` | Main work surfaces and cards |
+| Plum | `#24152F` | Familiar surfaces, selected navigation, atmospheric depth |
+| Plum light | `#38204A` | Hover states, subtle illustration fields |
+| Hot pink | `#FF3D9B` | Primary actions, completion, active signal, familiar spark |
+| Pink soft | `#FF9DCD` | Secondary emphasis on dark surfaces |
+| Ritual purple | `#9257E3` | Rituals, streaks, magical/detail accents |
+| Moon blue | `#56B4FF` | Energy, time, links, moonlight data |
+| Silver | `#C9CDD8` | Primary cool text, borders, moon surfaces |
+| Ash | `#938C9D` | Secondary text and metadata |
+
+Hot pink is the strongest signal. Purple, blue, and silver should create hierarchy around it, not compete with it. Avoid gradients on text and avoid using all accents in one component.
+
+## Typography
+
+- **Display:** Fraunces, weight 500-600. Use for page titles, familiar messages, and room names.
+- **Interface:** DM Sans, weight 400-700. Use for navigation, controls, metadata, and task content.
+- Display copy should be short and expressive. Interface copy should be direct and kind.
+- Body text must remain readable on `#111118` at accessible contrast. Never use ash for essential actions.
+
+## Illustration language
+
+Illustrations are high-detail, expressive companion characters with clear faces, readable gestures, and a slightly mischievous storybook personality. Use layered SVG or authored CSS art over emoji as the final visual. Characters can sit inside crisp silhouette and line-work environments:
+
+- **Crow:** Juniper, the primary guide; curious eyes, feather tufts, and a knowing head tilt. Appears near Today and insight moments.
+- **Owl:** reflection and journal; round expressive eyes and a calm, observant posture.
+- **Bat:** motion and quests; small, energetic, and a little chaotic near transitions and active tasks.
+- **Moon:** rhythm and rest; anchors dates, energy, and weekly cadence.
+- **Gravestones:** milestones and completed chapters; use sparingly as charming, hand-lettered progress markers, never as morbid decoration.
+- **Stars and botanical marks:** small navigation and state details, never wallpaper.
+
+The illustration system should have visible craft: layered feather and fur shapes, tiny silver rim-light, hot-pink eye or charm accents, facial expression, hand-drawn gesture, varied silhouette edges, and controlled shadow depth. Characters should remain legible at mobile sizes and never feel childish or clip-art-like.
+
+## Surface and interaction language
+
+- Cards use dark ink surfaces, 1px violet-gray borders, and compact 12-16px radii.
+- Elevation comes from offset shadows and controlled purple/pink light, never a generic glass blur.
+- Primary buttons are hot pink with dark ink text. Secondary buttons are outlined silver or plum.
+- Completion is a hot-pink check with a small glow and a clearly changed label state.
+- Focus rings are silver-blue or hot pink and must remain visible on every control.
+- Motion should be purposeful: a subtle familiar blink/float, a moon phase shift, and a single authored page entrance. Respect `prefers-reduced-motion`.
+
+## Layout contract
+
+- Desktop: fixed dark navigation rail, spacious content canvas, two-column Today composition.
+- Tablet: narrower rail, single-column content where cards would become cramped.
+- Mobile: compact header, stacked cards, no horizontal scrolling, all primary actions reachable with a thumb.
+- The first viewport must show: date/moon context, daily pulse, next actions, one check-in, and one familiar nudge.
+
+## Quality bar
+
+Every room needs real hierarchy, empty/loading/error states, keyboard-visible focus, and responsive behavior. No placeholder room should pretend to be complete. No decorative detail should obscure the next action. High detail belongs in the illustration and state transitions, not in visual noise.

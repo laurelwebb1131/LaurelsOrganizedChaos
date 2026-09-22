@@ -183,14 +183,18 @@ function Realm({ icon, name, value, color, width }: { icon: string; name: string
 }
 
 function CrowIllustration() {
-  return <svg className="crow-art" viewBox="0 0 180 100" role="img" aria-label="A crow perched beneath a moon">
-    <circle cx="143" cy="25" r="18" fill="none" stroke="currentColor" strokeWidth="1.2" />
-    <circle cx="149" cy="20" r="16" fill="var(--ink-plum)" />
-    <path d="M35 79c28-9 42-4 59 1 20 6 38 4 57-9M56 76c-4-22 4-39 22-42 15-3 27 8 28 21 1 15-9 24-28 25-8 1-16-1-22-4Z" fill="currentColor" opacity=".95" />
-    <path d="M78 40c5-9 15-14 25-9l12 8-10 3-8-2m-18 1 11-12 1 16M65 51l-17-8 10 14m65 12-10 16m-2-17 15 12m-37-9 4 16" fill="none" stroke="var(--hot-pink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="98" cy="45" r="2" fill="var(--hot-pink)" />
-    <path d="M18 89h146" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    <path d="M27 88c7-17 11-19 16-25m-5 24c4-14 7-19 12-24" fill="none" stroke="currentColor" strokeWidth="1.3" />
+  return <svg className="crow-art" viewBox="0 0 210 122" role="img" aria-label="Juniper the crow perched beneath a moon">
+    <circle cx="165" cy="27" r="21" fill="none" stroke="var(--silver)" strokeWidth="1.2" opacity=".8" />
+    <circle cx="172" cy="21" r="19" fill="var(--ink-plum)" />
+    <path d="M34 101c34-12 79-13 141-4" fill="none" stroke="var(--silver)" strokeWidth="3" strokeLinecap="round" opacity=".9" />
+    <path d="M67 91c-5-18-1-38 12-49 11-9 28-9 39 1 11 9 14 25 8 39-7 16-25 23-43 18Z" fill="var(--black)" stroke="var(--silver)" strokeWidth="1.3" />
+    <path d="M85 43c4-12 15-18 27-15l18 10-16 4-10-4m-26 8c-8 1-17-2-24-8l13 15m55 17 20 11-19-1m-7 5 7 19m-22-21-3 21" fill="none" stroke="var(--silver)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M95 49c6-5 16-6 23-1m-25 10c9 4 18 4 28-1m-31 12c10 4 20 4 30-1m-27 12c8 3 15 3 23-1" fill="none" stroke="var(--purple)" strokeWidth="1.5" strokeLinecap="round" opacity=".9" />
+    <path d="M83 43 73 29l18 8m20 1 11-15-2 19" fill="none" stroke="var(--hot-pink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="106" cy="44" r="2.8" fill="var(--hot-pink)" />
+    <path d="M109 48c5 2 9 2 13 0" fill="none" stroke="var(--hot-pink)" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M27 101c10-15 14-20 22-28m-8 28c4-12 8-17 14-23" fill="none" stroke="var(--purple)" strokeWidth="1.1" strokeLinecap="round" />
+    <circle cx="47" cy="29" r="1.7" fill="var(--hot-pink)" /><circle cx="62" cy="18" r="1.2" fill="var(--blue)" />
   </svg>
 }
 
