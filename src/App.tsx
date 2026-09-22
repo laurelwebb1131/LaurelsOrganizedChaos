@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
 import { defaultWorldState, loadWorldState, saveWorldState } from './worldState'
 import type { Companion } from './worldState'
+import { requestCompanionReply } from './companionProvider'
 
 type LocationId = 'library' | 'home' | 'university' | 'love-doctor'
 
@@ -187,19 +188,29 @@ function CompanionChat({ companion, realm, prompt }: { companion?: Companion; re
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('')
   const [messages, setMessages] = useState<{ from: 'you' | 'guide'; text: string }[]>([])
+  const [isThinking, setIsThinking] = useState(false)
   const guideName = companion?.name ?? (realm === 'The Library' ? 'Owl' : 'Hearth')
-  const send = (text: string) => {
+  const send = async (text: string) => {
     const clean = text.trim()
-    if (!clean) return
-    const reply = realm === 'The Library'
+    if (!clean || isThinking) return
+    const fallback = realm === 'The Library'
       ? `${guideName} says: start with the smallest version you can finish today. A finished page gives the next page somewhere to land.`
       : `${guideName} says: choose the kindest visible next step. The house does not need perfection, just a little more ease.`
-    setMessages((current) => [...current, { from: 'you', text: clean }, { from: 'guide', text: reply }])
+    setMessages((current) => [...current, { from: 'you', text: clean }])
     setDraft('')
+    setIsThinking(true)
+    try {
+      const reply = await requestCompanionReply({ companionName: guideName, companionRole: companion?.role ?? `${realm} guide`, companionContext: companion?.context ?? '', realm, userMessage: clean })
+      setMessages((current) => [...current, { from: 'guide', text: reply }])
+    } catch {
+      setMessages((current) => [...current, { from: 'guide', text: fallback }])
+    } finally {
+      setIsThinking(false)
+    }
   }
   return <div className={`companion-chat ${open ? 'open' : ''}`}>
     <button className="chat-trigger" onClick={() => setOpen((current) => !current)}><span>✦</span> Talk with {guideName}<b>{open ? '−' : '+'}</b></button>
-    {open && <div className="chat-window"><div className="chat-context"><span className="companion-avatar mini">{guideName === 'Juniper' ? '☾' : guideName.slice(0, 1).toUpperCase()}</span><div><strong>{guideName}</strong><small>{companion?.role ?? `${realm} guide`}</small></div></div><div className="chat-messages"><div className="chat-message guide-message">{companion?.context ?? 'I am here to help you find a gentle next step.'}</div>{messages.map((message, index) => <div className={`chat-message ${message.from === 'you' ? 'you-message' : 'guide-message'}`} key={`${message.text}-${index}`}>{message.text}</div>)}</div><div className="chat-suggestions"><button onClick={() => send(prompt)}>{prompt}</button><button onClick={() => send('What should I do first?')}>What first?</button></div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(draft) }}><input aria-label={`Message ${guideName}`} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Say something..." /><button aria-label="Send message" disabled={!draft.trim()}>↗</button></form></div>}
+    {open && <div className="chat-window"><div className="chat-context"><span className="companion-avatar mini">{guideName === 'Juniper' ? '☾' : guideName.slice(0, 1).toUpperCase()}</span><div><strong>{guideName}</strong><small>{companion?.role ?? `${realm} guide`}</small></div></div><div className="chat-messages"><div className="chat-message guide-message">{companion?.context ?? 'I am here to help you find a gentle next step.'}</div>{messages.map((message, index) => <div className={`chat-message ${message.from === 'you' ? 'you-message' : 'guide-message'}`} key={`${message.text}-${index}`}>{message.text}</div>)}{isThinking && <div className="chat-message guide-message thinking">Thinking through your world...</div>}</div><div className="chat-suggestions"><button onClick={() => void send(prompt)}>{prompt}</button><button onClick={() => void send('What should I do first?')}>What first?</button></div><form className="chat-form" onSubmit={(event) => { event.preventDefault(); void send(draft) }}><input aria-label={`Message ${guideName}`} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Say something..." /><button aria-label="Send message" disabled={!draft.trim() || isThinking}>↗</button></form></div>}
   </div>
 }
 
