@@ -130,22 +130,27 @@ function App() {
       <header className="world-header">
         <div className="world-brand"><span className="brand-sigil">☾</span><div><strong>Hearthwise</strong><small>your life, in orbit</small></div></div>
         <div className="world-status"><span className="status-pulse" /> WORLD ONLINE <b>·</b> {worldDate}</div>
-        <button className="profile-button"><span className="profile-orb">LW</span><span className="profile-name">Laurel Webb</span><span>⌄</span></button>
+        <div className="profile-button" aria-label="Current profile"><span className="profile-orb">LW</span><span className="profile-name">Laurel Webb</span></div>
       </header>
 
       <aside className="world-nav">
         <div className="nav-kicker">YOUR WORLD</div>
-        <button className="nav-tab active"><span>◎</span> Planet view</button>
-        <button className="nav-tab"><span>♧</span> Daily orbit <b>3</b></button>
-        <button className="nav-tab"><span>✧</span> Milestones</button>
-        <button className="nav-tab"><span>☽</span> Night journal</button>
+        <div className="nav-tab active" aria-current="page"><span>◎</span> Planet view</div>
+        <div className="nav-tab nav-tab-muted"><span>♧</span> Daily orbit</div>
+        <div className="nav-tab nav-tab-muted"><span>✧</span> Milestones</div>
+        <div className="nav-tab nav-tab-muted"><span>☽</span> Night journal</div>
         <div className="nav-divider" />
         <div className="nav-kicker">WORLD SETTINGS</div>
         <button className="nav-tab" onClick={() => {
           const file = new Blob([exportWorldState(worldState)], { type: 'application/json' })
           const url = URL.createObjectURL(file)
           const link = document.createElement('a')
-          link.href = url; link.download = 'hearthwise-world.json'; link.click(); URL.revokeObjectURL(url)
+          link.href = url
+          link.download = 'hearthwise-world.json'
+          document.body.appendChild(link)
+          link.click()
+          link.remove()
+          window.setTimeout(() => URL.revokeObjectURL(url), 0)
         }}><span>⇩</span> Export world</button>
         <button className="nav-tab" onClick={() => {
           const phrase = window.prompt('Type RESET WORLD to erase this local world.')
@@ -211,6 +216,10 @@ function CompanionCodex({ companions, onClose, onAdd }: { companions: Companion[
 function LibraryRoom({ onBack, savedIdeas, companions, goals, habits, onSaveIdea }: { onBack: () => void; savedIdeas: string[]; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits; onSaveIdea: (idea: string) => void }) {
   const [idea, setIdea] = useState<string | null>(null)
   const guide = companions.find((companion) => companion.realm === 'The Library' || companion.realm === 'All realms') ?? companions[0]
+  const libraryGoals = goals.filter((goal) => goal.realm === 'The Library' || goal.realm === 'All realms')
+  const libraryProgress = libraryGoals.length
+    ? Math.round(libraryGoals.reduce((sum, goal) => sum + goal.progress, 0) / libraryGoals.length)
+    : 0
   const ideas = [
     'Set a 20-minute “tiny prototype” timer and build one beautiful corner of Hearthwise before lunch.',
     'Write three sentences about the person this world is meant to help, then use one as your next design test.',
@@ -233,9 +242,9 @@ function LibraryRoom({ onBack, savedIdeas, companions, goals, habits, onSaveIdea
         <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
       </Canvas>
     </div>
-    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><button className="room-profile">LW</button></header>
-    <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>68%</strong><small>weekly tending</small></div><div><strong>12</strong><small>open ideas</small></div><div><strong>3</strong><small>active goals</small></div></div></section>
-    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><button className="close-button">•••</button></div><div className="goal-row active-goal"><span className="goal-icon">✦</span><div><strong>Build Hearthwise</strong><small>Creative work · 68% tended</small><div className="goal-track"><i /></div></div><b>68%</b></div><div className="goal-row"><span className="goal-icon blue">◇</span><div><strong>Learn 3D design</strong><small>Learning · 4 of 8 sessions</small><div className="goal-track blue-track"><i /></div></div><b>50%</b></div>{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { onSaveIdea(idea); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LIBRARY</strong></div><div className="room-profile" aria-label="Current profile">LW</div></header>
+    <section className="room-intro"><div className="copy-kicker"><span>✦</span> PERSONAL GOALS</div><h1>The<br /><em>Library</em></h1><p>A quiet place for the ideas you are growing into.</p><div className="room-progress"><div><strong>{libraryProgress}%</strong><small>goal progress</small></div><div><strong>{savedIdeas.length}</strong><small>saved ideas</small></div><div><strong>{libraryGoals.length}</strong><small>active goals</small></div></div></section>
+    <section className="goal-panel"><div className="panel-topline"><span className="panel-label">YOUR SHELVES</span><span className="close-button" aria-hidden="true">•••</span></div>{libraryGoals.length ? libraryGoals.map((goal, index) => <div className={`goal-row ${index === 0 ? 'active-goal' : ''}`} key={goal.id}><span className={`goal-icon ${index % 2 ? 'blue' : ''}`}>{index % 2 ? '◇' : '✦'}</span><div><strong>{goal.title}</strong><small>{goal.nextStep || goal.realm}</small><div className={`goal-track ${index % 2 ? 'blue-track' : ''}`}><i style={{ width: `${goal.progress}%` }} /></div></div><b>{goal.progress}%</b></div>) : <p className="love-copy">No Library goals yet.</p>}{idea && <div className="idea-result"><span>✦</span><p>{idea}</p><button onClick={() => { onSaveIdea(idea); setIdea(null) }}>Save to shelf</button></div>}<button className="idea-button" onClick={askJuniper}><span>✧</span> {idea ? 'Ask for another idea' : 'Ask Juniper for an idea'} <b>↗</b></button></section>
     <CompanionChat companion={guide} realm="The Library" prompt="Help me choose my next idea" goals={goals} habits={habits} />
     <div className="room-note"><span className="owl-glyph">◉</span><div><strong>{guide?.name ?? 'Owl'} · {guide?.role ?? 'Library guide'}</strong><p>{savedIdeas.length ? `${savedIdeas.length} idea${savedIdeas.length === 1 ? '' : 's'} tucked onto your shelf.` : `“${guide?.context ?? 'A good idea is often just a question you have not asked yet.'}”`}</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> SELECT A SHELF TO EXPLORE</div>
@@ -244,6 +253,9 @@ function LibraryRoom({ onBack, savedIdeas, companions, goals, habits, onSaveIdea
 
 function HomeRoom({ onBack, chores, companions, goals, habits, onChoresChange }: { onBack: () => void; chores: typeof defaultWorldState.chores; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits; onChoresChange: (chores: typeof defaultWorldState.chores) => void }) {
   const completed = chores.filter((chore) => chore.done).length
+  const homeCompanions = companions.filter((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')
+  const homeHabits = habits.filter((habit) => habit.realm === 'Hearth House' || habit.realm === 'All realms')
+  const dueHomeHabits = homeHabits.filter((habit) => !habit.completedToday)
   const toggleChore = (index: number) => onChoresChange(chores.map((chore, choreIndex) => choreIndex === index ? { ...chore, done: !chore.done } : chore))
 
   return <div className="room-app home-room">
@@ -261,25 +273,26 @@ function HomeRoom({ onBack, chores, companions, goals, habits, onChoresChange }:
         <OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} />
       </Canvas>
     </div>
-    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>HEARTH HOUSE</strong></div><button className="room-profile">LW</button></header>
-    <section className="room-intro"><div className="copy-kicker blue-kicker"><span>⌂</span> FAMILY + EVERYDAY LIFE</div><h1>Hearth<br /><em>House</em></h1><p>The living room of your world: care, rhythms, and the work that keeps everyone held.</p><div className="room-progress"><div><strong>{completed}/{chores.length}</strong><small>tended today</small></div><div><strong>4</strong><small>people linked</small></div><div><strong>2</strong><small>rituals due</small></div></div></section>
-    <section className="goal-panel home-panel"><div className="panel-topline"><span className="panel-label">TODAY AT HOME</span><span className="home-weather">☾ 64°</span></div>{chores.map((chore, index) => <button className={`home-chore ${chore.done ? 'done' : ''}`} key={chore.label} onClick={() => toggleChore(index)}><span className="chore-check">{chore.done ? '✓' : ''}</span><span><strong>{chore.label}</strong><small>{chore.detail}</small></span><b>›</b></button>)}<div className="home-summary"><span className="home-spark">✦</span><p>{completed === chores.length ? 'The house is settled for tonight.' : 'One small tending can make the whole room feel lighter.'}</p></div></section>
-    <CompanionChat companion={companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')} realm="Hearth House" prompt="Help me make home feel lighter" goals={goals} habits={habits} />
-    <div className="room-note"><span className="owl-glyph blue-owl">☾</span><div><strong>{companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')?.name ?? 'Hearth'} · household guide</strong><p>“{companions.find((companion) => companion.realm === 'Hearth House' || companion.realm === 'All realms')?.context ?? 'Care is not one grand gesture. It is the little things, remembered.'}”</p></div></div>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>HEARTH HOUSE</strong></div><div className="room-profile" aria-label="Current profile">LW</div></header>
+    <section className="room-intro"><div className="copy-kicker blue-kicker"><span>⌂</span> FAMILY + EVERYDAY LIFE</div><h1>Hearth<br /><em>House</em></h1><p>The living room of your world: care, rhythms, and the work that keeps everyone held.</p><div className="room-progress"><div><strong>{completed}/{chores.length}</strong><small>tended today</small></div><div><strong>{homeCompanions.length}</strong><small>companions linked</small></div><div><strong>{dueHomeHabits.length}</strong><small>rituals due</small></div></div></section>
+    <section className="goal-panel home-panel"><div className="panel-topline"><span className="panel-label">TODAY AT HOME</span><span className="home-weather">☾ HOME RHYTHM</span></div>{chores.map((chore, index) => <button className={`home-chore ${chore.done ? 'done' : ''}`} key={chore.label} onClick={() => toggleChore(index)}><span className="chore-check">{chore.done ? '✓' : ''}</span><span><strong>{chore.label}</strong><small>{chore.detail}</small></span><b>›</b></button>)}<div className="home-summary"><span className="home-spark">✦</span><p>{completed === chores.length ? 'The house is settled for tonight.' : 'One small tending can make the whole room feel lighter.'}</p></div></section>
+    <CompanionChat companion={homeCompanions[0]} realm="Hearth House" prompt="Help me make home feel lighter" goals={goals} habits={habits} />
+    <div className="room-note"><span className="owl-glyph blue-owl">☾</span><div><strong>{homeCompanions[0]?.name ?? 'Hearth'} · household guide</strong><p>“{homeCompanions[0]?.context ?? 'Care is not one grand gesture. It is the little things, remembered.'}”</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> TEND A CHORE TO MARK IT COMPLETE</div>
   </div>
 }
 
 function UniversityRoom({ onBack, companions, goals, habits }: { onBack: () => void; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits }) {
-  const learningGoal = goals.find((goal) => goal.realm === 'The University')
+  const universityGoals = goals.filter((goal) => goal.realm === 'The University' || goal.realm === 'All realms')
+  const learningGoal = universityGoals[0]
   const studyHabit = habits.find((habit) => habit.realm === 'The University')
   const guide = companions.find((companion) => companion.realm === 'The University' || companion.realm === 'All realms')
   const [sessionStarted, setSessionStarted] = useState(false)
   return <div className="room-app university-room">
     <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.2, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#090b14']} /><fog attach="fog" args={['#090b14', 7, 13]} /><ambientLight intensity={1.5} color="#c5c0e5" /><directionalLight castShadow position={[3, 6, 4]} intensity={4} color="#e9f3ff" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={15} distance={8} color="#9257e3" /><pointLight position={[3, 2, 3]} intensity={10} distance={7} color="#56b4ff" /><Stars radius={70} depth={30} count={950} factor={1.8} fade speed={.2} /><Suspense fallback={<SceneLoading label="Opening The University..." />}><UniversityScene /></Suspense><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#030509" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
-    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE UNIVERSITY</strong></div><button className="room-profile">LW</button></header>
-    <section className="room-intro"><div className="copy-kicker university-kicker"><span>◇</span> EDUCATION GOALS</div><h1>The<br /><em>University</em></h1><p>A place for curiosity, practice, and the skills you want to carry forward.</p><div className="room-progress"><div><strong>{learningGoal?.progress ?? 50}%</strong><small>course progress</small></div><div><strong>{studyHabit?.completedToday ? '1' : '0'}</strong><small>session today</small></div><div><strong>4</strong><small>lessons left</small></div></div></section>
-    <section className="goal-panel university-panel"><div className="panel-topline"><span className="panel-label">CURRENT STUDY PLAN</span><span className="home-weather">✦ FOCUS MODE</span></div><div className="study-card"><div className="study-orb">◇</div><div><strong>Learn 3D design</strong><small>{learningGoal?.nextStep ?? 'Complete one focused practice session.'}</small></div><b>{learningGoal?.progress ?? 50}%</b></div><div className="study-track"><i style={{ width: `${learningGoal?.progress ?? 50}%` }} /></div><button className={`enter-button study-button ${sessionStarted ? 'session-active' : ''}`} onClick={() => setSessionStarted((current) => !current)}>{sessionStarted ? 'Study session in progress' : 'Start a 25-minute session'} <span>{sessionStarted ? '◉' : '↗'}</span></button><div className="study-note"><span>✧</span><p>{sessionStarted ? 'Your next step is small enough to begin. Keep going.' : 'A short session counts. You are building a path, not proving a point.'}</p></div></section>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE UNIVERSITY</strong></div><div className="room-profile" aria-label="Current profile">LW</div></header>
+    <section className="room-intro"><div className="copy-kicker university-kicker"><span>◇</span> EDUCATION GOALS</div><h1>The<br /><em>University</em></h1><p>A place for curiosity, practice, and the skills you want to carry forward.</p><div className="room-progress"><div><strong>{learningGoal?.progress ?? 0}%</strong><small>goal progress</small></div><div><strong>{studyHabit?.completedToday ? '1' : '0'}</strong><small>session today</small></div><div><strong>{universityGoals.length}</strong><small>goals tracked</small></div></div></section>
+    <section className="goal-panel university-panel"><div className="panel-topline"><span className="panel-label">CURRENT STUDY PLAN</span><span className="home-weather">✦ FOCUS MODE</span></div><div className="study-card"><div className="study-orb">◇</div><div><strong>{learningGoal?.title ?? 'Choose a learning goal'}</strong><small>{learningGoal?.nextStep ?? 'Complete one focused practice session.'}</small></div><b>{learningGoal?.progress ?? 0}%</b></div><div className="study-track"><i style={{ width: `${learningGoal?.progress ?? 0}%` }} /></div><button className={`enter-button study-button ${sessionStarted ? 'session-active' : ''}`} onClick={() => setSessionStarted((current) => !current)}>{sessionStarted ? 'Study session in progress' : 'Start a 25-minute session'} <span>{sessionStarted ? '◉' : '↗'}</span></button><div className="study-note"><span>✧</span><p>{sessionStarted ? 'Your next step is small enough to begin. Keep going.' : 'A short session counts. You are building a path, not proving a point.'}</p></div></section>
     <CompanionChat companion={guide} realm="The University" prompt="Help me choose what to study first" goals={goals} habits={habits} />
     <div className="room-note"><span className="owl-glyph university-owl">◇</span><div><strong>{guide?.name ?? 'The Owl'} · learning guide</strong><p>“{guide?.context ?? 'Curiosity is a direction. Let’s take one step.'}”</p></div></div>
     <div className="room-hint">DRAG TO LOOK AROUND <b>·</b> START A SESSION TO MARK MOMENTUM</div>
@@ -288,13 +301,16 @@ function UniversityRoom({ onBack, companions, goals, habits }: { onBack: () => v
 
 function LoveDoctorRoom({ onBack, companions, goals, habits }: { onBack: () => void; companions: Companion[]; goals: typeof defaultWorldState.goals; habits: typeof defaultWorldState.habits }) {
   const guide = companions.find((companion) => companion.realm === 'The Love Doctor' || companion.realm === 'All realms')
-  const relationshipGoal = goals.find((goal) => goal.realm === 'The Love Doctor')
+  const relationshipGoals = goals.filter((goal) => goal.realm === 'The Love Doctor' || goal.realm === 'All realms')
+  const relationshipGoal = relationshipGoals[0]
+  const relationshipHabits = habits.filter((habit) => habit.realm === 'The Love Doctor' || habit.realm === 'All realms')
+  const dueRelationshipHabits = relationshipHabits.filter((habit) => !habit.completedToday)
   const [selectedPractice, setSelectedPractice] = useState('A clear, kind check-in')
   const practices = ['A clear, kind check-in', 'Name one thing you appreciate', 'Make space for an honest question']
   return <div className="room-app love-room">
     <div className="room-canvas"><Canvas shadows camera={{ position: [0, 1.1, 7.8], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#110910']} /><fog attach="fog" args={['#110910', 7, 13]} /><ambientLight intensity={1.5} color="#f4c8df" /><directionalLight castShadow position={[3, 6, 4]} intensity={3.6} color="#fff1fb" shadow-mapSize={[2048, 2048]} /><pointLight position={[-3, 3, 2]} intensity={16} distance={8} color="#ff3d9b" /><pointLight position={[3, 2, 3]} intensity={8} distance={7} color="#9257e3" /><Stars radius={70} depth={30} count={850} factor={1.6} fade speed={.2} /><Suspense fallback={<SceneLoading label="Opening The Love Doctor..." />}><LoveScene /></Suspense><ContactShadows position={[0, -1.35, 0]} opacity={.5} scale={8} blur={2.4} far={4} color="#080308" /><OrbitControls enablePan={false} minDistance={5} maxDistance={10} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.7} /></Canvas></div>
-    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LOVE DOCTOR</strong></div><button className="room-profile">LW</button></header>
-    <section className="room-intro"><div className="copy-kicker love-kicker"><span>♡</span> RELATIONSHIP GOALS</div><h1>The<br /><em>Love Doctor</em></h1><p>A gentle room for connection, communication, and care that respects everyone's agency.</p><div className="room-progress"><div><strong>{relationshipGoal?.progress ?? 0}%</strong><small>goal progress</small></div><div><strong>2</strong><small>open reflections</small></div><div><strong>1</strong><small>practice today</small></div></div></section>
+    <header className="room-header"><button className="back-button" onClick={onBack}>← <span>Return to your world</span></button><div className="room-breadcrumb"><span>YOUR WORLD</span><b>/</b><strong>THE LOVE DOCTOR</strong></div><div className="room-profile" aria-label="Current profile">LW</div></header>
+    <section className="room-intro"><div className="copy-kicker love-kicker"><span>♡</span> RELATIONSHIP GOALS</div><h1>The<br /><em>Love Doctor</em></h1><p>A gentle room for connection, communication, and care that respects everyone's agency.</p><div className="room-progress"><div><strong>{relationshipGoal?.progress ?? 0}%</strong><small>goal progress</small></div><div><strong>{dueRelationshipHabits.length}</strong><small>habits due</small></div><div><strong>{practices.length}</strong><small>practice choices</small></div></div></section>
     <section className="goal-panel love-panel"><div className="panel-topline"><span className="panel-label">CHOOSE A PRACTICE</span><span className="home-weather">♡ CONSENT FIRST</span></div><p className="love-copy">Small practices for connection. Choose only what feels welcome for everyone involved.</p>{practices.map((practice) => <button key={practice} className={`practice-option ${selectedPractice === practice ? 'selected' : ''}`} onClick={() => setSelectedPractice(practice)}><span>{selectedPractice === practice ? '✓' : '○'}</span>{practice}</button>)}<button className="enter-button love-button" onClick={() => window.alert(`Practice chosen: ${selectedPractice}`)}>Keep this practice <span>↗</span></button></section>
     <CompanionChat companion={guide} realm="The Love Doctor" prompt="Help me prepare for a caring conversation" goals={goals} habits={habits} />
     <div className="room-note"><span className="owl-glyph love-owl">♡</span><div><strong>{guide?.name ?? 'The Love Doctor'} · connection guide</strong><p>“{guide?.context ?? 'Connection grows where honesty and consent can sit together.'}”</p></div></div>
