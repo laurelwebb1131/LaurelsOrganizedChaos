@@ -1,4 +1,4 @@
-const CACHE = 'loc-planner-grimoire-dashboard-v6';
+const CACHE = 'loc-planner-antique-cover-v7';
 const APP_SHELL = [
   './',
   './index.html',
