@@ -29,7 +29,7 @@ test('health endpoint returns service status', async () => {
 test('companion endpoint rejects unsupported methods', async () => {
   const response = await request('/api/companion')
   assert.equal(response.status, 405)
-  assert.equal(response.headers.allow, 'POST')
+  assert.equal(response.headers.allow, 'POST, OPTIONS')
 })
 
 test('companion endpoint validates JSON', async () => {
