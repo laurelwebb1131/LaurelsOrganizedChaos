@@ -3016,3 +3016,5 @@ body.cover-mode #main-content {
   .cover-open-plaque { transition: none; }
   .antique-book-cover { transform: none; }
 }
+
+.planner-loading{min-height:100vh;padding:32px;display:grid;align-content:center;justify-items:center;gap:10px;background:#120b08;color:#eee4cf;font-family:Georgia,"Times New Roman",serif;text-align:center}.planner-loading h1,.planner-loading p{margin:0;max-width:680px}.planner-loading p{color:#b9aa91;line-height:1.6}
