@@ -11,7 +11,7 @@
     "server": "tsx server/index.ts",
     "server:check": "tsx --eval \"import { handleHealth } from './server/companion.ts'; console.log(typeof handleHealth)\"",
     "assets:verify": "node scripts/verify-assets.mjs",
-    "test": "node --import tsx --test server/*.test.ts",
+    "test": "node --import tsx --test server/*.test.ts src/*.test.ts",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
