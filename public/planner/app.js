@@ -1832,7 +1832,7 @@
 
   let scheduled = false;
 
-  function route() {
+  function visualRoute() {
     const raw = (location.hash || '#cover').slice(1).split('?')[0];
     if (raw === 'cover') return 'cover';
     return PAGE_META[raw] ? raw : 'dashboard';
@@ -1958,7 +1958,7 @@
 
   function apply() {
     scheduled = false;
-    const current = route();
+    const current = visualRoute();
     document.body.dataset.step2Page = current;
     if (current === 'cover') {
       document.querySelector('.step2-chapter-tab')?.remove();
@@ -1987,7 +1987,7 @@
 
   const observer = new MutationObserver(queueApply);
   const main = document.getElementById('main-content');
-  if (main) observer.observe(main, { childList:true, subtree:true, attributes:true, attributeFilter:['class','style'] });
+  if (main) observer.observe(main, { childList: true, subtree: true });
   window.addEventListener('hashchange', queueApply);
   window.addEventListener('resize', () => document.body.dataset.step2Viewport = innerWidth < 681 ? 'phone' : innerWidth < 901 ? 'tablet' : 'desktop');
   document.body.dataset.step2Viewport = innerWidth < 681 ? 'phone' : innerWidth < 901 ? 'tablet' : 'desktop';
