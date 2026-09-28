@@ -340,14 +340,17 @@
   }
 
   function saveState({ render = false } = {}) {
+    let saved = true;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (err) {
+      saved = false;
       console.error('Could not save planner data', err);
       toast('Browser storage is full. Export a backup and remove a few large photos or backgrounds.');
     }
     applyTheme();
     if (render) renderApp();
+    return saved;
   }
 
   function ensureToday() {
@@ -1661,9 +1664,15 @@
         throw new Error('The backup is missing required planner data.');
       }
       if (!confirm('Import this backup and replace current local planner data? A temporary pre-import recovery copy will be saved in this browser first.')) return;
-      try { localStorage.setItem(STORAGE_KEY + '-pre-import', JSON.stringify(state)); } catch (_) {}
+      const previousState = state;
+      try { localStorage.setItem(STORAGE_KEY + '-pre-import', JSON.stringify(previousState)); } catch (_) {}
       state = restored;
-      saveState({ render: true });
+      if (!saveState()) {
+        state = previousState;
+        renderApp();
+        throw new Error('The backup was valid, but the browser could not store it. Your previous planner data is still active.');
+      }
+      renderApp();
       toast('Backup imported.');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not import that backup.');
