@@ -796,10 +796,18 @@
     </article>`;
   }
 
+  function stopTimerTicker() {
+    if (!timerInterval) return;
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
   function syncTimerTicker() {
-    if (timerInterval) clearInterval(timerInterval);
+    stopTimerTicker();
     updateTimerDisplay();
-    timerInterval = setInterval(updateTimerDisplay, 1000);
+    if (state.timer.running && !state.timer.paused) {
+      timerInterval = setInterval(updateTimerDisplay, 1000);
+    }
   }
 
   function updateTimerDisplay() {
@@ -811,8 +819,10 @@
       el.textContent = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
     }
     if (remaining <= 0) {
+      stopTimerTicker();
       state.timer.running = false;
       state.timer.remainingMs = 0;
+      state.timer.endAt = null;
       saveState();
       if (state.settings.sound) beep();
       timerCompletionModal();
@@ -851,13 +861,19 @@
 
   function beep() {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextCtor) return;
+      const ctx = new AudioContextCtor();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.frequency.value = 720;
       gain.gain.setValueAtTime(.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .5);
-      osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + .5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.addEventListener('ended', () => { void ctx.close().catch(() => {}); }, { once: true });
+      osc.start();
+      osc.stop(ctx.currentTime + .5);
     } catch (_) {}
   }
 
@@ -1246,16 +1262,51 @@
   });
 
   let autosaveTimeout = null;
-  document.addEventListener('input', (e) => {
-    const el = e.target;
+
+  function scheduleAutosave() {
     clearTimeout(autosaveTimeout);
     autosaveTimeout = setTimeout(() => {
-      if (el.dataset.dayField) { ensureToday()[el.dataset.dayField] = el.value; saveState(); }
-      if (el.dataset.weekField) { ensureWeek()[el.dataset.weekField] = el.value; saveState(); }
-      if (el.dataset.weekTop !== undefined) { ensureWeek().top3[Number(el.dataset.weekTop)] = el.value; saveState(); }
-      if (el.id === 'home-notes') { state.home.notes=el.value;saveState(); }
-      if (el.dataset.monthNote) { state.ui.monthNotes[el.dataset.monthNote] = el.value; saveState(); }
+      autosaveTimeout = null;
+      saveState();
     }, 250);
+  }
+
+  function flushAutosave() {
+    if (!autosaveTimeout) return;
+    clearTimeout(autosaveTimeout);
+    autosaveTimeout = null;
+    saveState();
+  }
+
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+
+    let changed = false;
+    if (el.dataset.dayField) {
+      ensureToday()[el.dataset.dayField] = el.value;
+      changed = true;
+    }
+    if (el.dataset.weekField) {
+      ensureWeek()[el.dataset.weekField] = el.value;
+      changed = true;
+    }
+    if (el.dataset.weekTop !== undefined) {
+      const index = Number(el.dataset.weekTop);
+      if (Number.isInteger(index) && index >= 0 && index < 3) {
+        ensureWeek().top3[index] = el.value;
+        changed = true;
+      }
+    }
+    if (el.id === 'home-notes') {
+      state.home.notes = el.value;
+      changed = true;
+    }
+    if (el.dataset.monthNote) {
+      state.ui.monthNotes[el.dataset.monthNote] = el.value;
+      changed = true;
+    }
+    if (changed) scheduleAutosave();
   });
 
   document.addEventListener('submit', async (e) => {
