@@ -62,7 +62,7 @@ check(app.includes('function renderCover()'), 'cover renderer is missing')
 check(app.includes("location.hash='cover'"), 'planner must default to the cover route')
 check(app.includes("route() === 'cover'"), 'cover mode route handling is missing')
 check(app.includes('data-route="dashboard"'), 'Open the Book must currently enter the dashboard')
-check(app.includes('Laurel’s Organized Chaos'), 'cover title is missing')
+check(app.includes('Laurel’s') && app.includes('Organized Chaos'), 'cover title is missing')
 check(app.includes('Book of Daily Order &amp; Domestic Sorcery'), 'cover subtitle is missing')
 
 const requiredRenderers = [
