@@ -1,22 +1,15 @@
-const CACHE = 'loc-planner-step2-v4b';
-const ASSETS = [
+const CACHE = 'loc-planner-final-v5';
+const APP_SHELL = [
   './',
   './index.html',
+  './styles.css',
+  './app.js',
   './manifest.webmanifest',
-  './payload/style-0.txt',
-  './payload/style-1.txt',
-  './payload/app-0.txt',
-  './payload/app-1.txt',
-  './payload/app-2.txt',
-  './payload/app-3.txt',
-  './payload/step2-style-a.txt',
-  './payload/step2-style-b.txt',
-  './payload/step2-style-c.txt',
-  './payload/step2-app-0.txt'
+  './icon.svg'
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
@@ -30,13 +23,33 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put('./index.html', copy));
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(hit =>
-      hit || fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE).then(cache => cache.put(event.request, copy));
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put(event.request, copy));
+        }
         return response;
-      }).catch(() => caches.match('./index.html'))
-    )
+      });
+    })
   );
 });
