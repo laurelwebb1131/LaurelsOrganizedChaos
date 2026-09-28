@@ -1,8 +1,8 @@
 import { Canvas } from '@react-three/fiber'
 import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
 import { useLoader } from '@react-three/fiber'
-import { TextureLoader } from 'three'
-import { Suspense, useEffect, useState } from 'react'
+import { DoubleSide, TextureLoader } from 'three'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import './styles.css'
 import { defaultWorldState, exportWorldState, importWorldState, isWorldLocationId, loadWorldState, resetWorldState, saveWorldState } from './worldState'
 import type { Companion, WorldLocationId } from './worldState'
@@ -434,34 +434,12 @@ function MythicEarth() {
     </mesh>
     <mesh scale={1.035}>
       <sphereGeometry args={[2.55, 96, 96]} />
-      <meshBasicMaterial color="#9fe3ff" transparent opacity={0.11} side={2} />
+      <meshBasicMaterial color="#9fe3ff" transparent opacity={0.11} side={DoubleSide} />
     </mesh>
     <mesh scale={1.065}>
       <sphereGeometry args={[2.55, 96, 96]} />
       <meshBasicMaterial color="#72cfff" transparent opacity={0.09} wireframe />
     </mesh>
-  </group>
-}
-
-function EarthLand() {
-  const landforms: [number, number, number, number, number, number][] = [
-    [-1.48, 1.2, 1.78, .9, .32, .18], [-.76, 1.66, 1.72, .52, .25, .16],
-    [.44, 1.7, 1.72, .85, .3, .2], [1.25, .95, 1.9, .58, .38, .2],
-    [-1.45, -.1, 2.05, .7, .34, .17], [-.54, -.56, 2.17, .6, .3, .15],
-    [.75, -.85, 2.0, .92, .3, .18], [1.55, -.2, 1.85, .4, .25, .14],
-  ]
-  return <group rotation={[0.15, -0.25, 0.1]}>{landforms.map(([x, y, z, sx, sy, sz], index) => <mesh key={index} position={[x, y, z]} scale={[sx, sy, sz]} rotation={[0.1 * index, 0.18 * index, 0.2]}>
-    <sphereGeometry args={[1, 24, 16]} />
-    <meshStandardMaterial color={index % 3 === 0 ? '#56845a' : '#3e7650'} roughness={0.92} metalness={0.03} />
-  </mesh>)}</group>
-}
-
-function CloudBands() {
-  return <group rotation={[0.15, 0.25, 0.1]}>
-    {[[-.9, 1.9, 1.38, .8, .12, .12], [1.15, .45, 1.82, .65, .1, .1], [-1.4, -.8, 1.65, .6, .09, .1]].map(([x, y, z, sx, sy, sz], index) => <mesh key={index} position={[x, y, z]} scale={[sx, sy, sz]} rotation={[0, .3, .2]}>
-      <sphereGeometry args={[1, 24, 12]} />
-      <meshBasicMaterial color="#e8f3ff" transparent opacity={.18} />
-    </mesh>)}
   </group>
 }
 
@@ -472,8 +450,8 @@ function MythicDragon({ position }: { position: [number, number, number] }) {
     <mesh position={[0, .98, .03]} rotation={[0, 0, 0]}><coneGeometry args={[.13, .4, 5]} /><meshStandardMaterial color="#4b2b62" /></mesh>
     <mesh position={[-.1, .78, .26]}><sphereGeometry args={[.045, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
     <mesh position={[.1, .78, .26]}><sphereGeometry args={[.045, 12, 12]} /><meshBasicMaterial color="#ff3d9b" /></mesh>
-    <mesh position={[-.48, .2, 0]} rotation={[0, .2, -.35]}><coneGeometry args={[.62, 1.12, 5]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.22} side={2} /></mesh>
-    <mesh position={[.48, .2, 0]} rotation={[0, -.2, .35]}><coneGeometry args={[.62, 1.12, 5]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.22} side={2} /></mesh>
+    <mesh position={[-.48, .2, 0]} rotation={[0, .2, -.35]}><coneGeometry args={[.62, 1.12, 5]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.22} side={DoubleSide} /></mesh>
+    <mesh position={[.48, .2, 0]} rotation={[0, -.2, .35]}><coneGeometry args={[.62, 1.12, 5]} /><meshStandardMaterial color="#44245b" emissive="#ff3d9b" emissiveIntensity={.22} side={DoubleSide} /></mesh>
     <mesh position={[0, -.75, .04]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[.17, 1.15, 10]} /><meshStandardMaterial color="#241630" /></mesh>
     <mesh position={[-.13, -.63, .18]}><capsuleGeometry args={[.06, .34, 6, 10]} /><meshStandardMaterial color="#241630" /></mesh>
     <mesh position={[.13, -.63, .18]}><capsuleGeometry args={[.06, .34, 6, 10]} /><meshStandardMaterial color="#241630" /></mesh>
@@ -492,24 +470,16 @@ function MoonSpirit({ position }: { position: [number, number, number] }) {
   </group>
 }
 
-function ImportedCreature({ position }: { position: [number, number, number] }) {
-  const { scene } = useGLTF('/assets/creatures/cc0-spider.glb')
-  return <primitive object={scene.clone()} position={position} scale={0.28} rotation={[0, 0.6, 0]} />
-}
-
 function ImportedAsset({ path, position, scale }: { path: string; position: [number, number, number]; scale: number }) {
   const { scene } = useGLTF(path)
-  return <primitive object={scene.clone()} position={position} scale={scale} />
+  const clonedScene = useMemo(() => scene.clone(), [scene])
+  return <primitive object={clonedScene} position={position} scale={scale} />
 }
 
 function SceneLoading({ label }: { label: string }) {
   return <Html center><div className="scene-loading"><span className="loading-orb">✦</span><strong>{label}</strong><small>Gathering the starlight</small></div></Html>
 }
 
-useGLTF.preload('/assets/creatures/cc0-spider.glb')
-useGLTF.preload('/assets/cc0/creatures/001_triangulon_art.glb')
-useGLTF.preload('/assets/cc0/creatures/003_hexabear_art.glb')
-useGLTF.preload('/assets/cc0/creatures/006_whormbus_art.glb')
 useGLTF.preload('/assets/cc0/environment/crystal_cluster.glb')
 useGLTF.preload('/assets/cc0/environment/crystal_base.glb')
 useGLTF.preload('/assets/cc0/environment/column_regular.glb')
