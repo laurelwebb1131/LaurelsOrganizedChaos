@@ -1,6 +1,5 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useLoader } from '@react-three/fiber'
 import { ContactShadows, Float, Html, OrbitControls, Sparkles, Stars, Text, useGLTF } from '@react-three/drei'
-import { useLoader } from '@react-three/fiber'
 import { DoubleSide, TextureLoader } from 'three'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import './styles.css'
