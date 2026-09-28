@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - planner-v1
+      - laurelwebb1131-build-hearthwise-dashboard
     paths:
       - 'public/planner/**'
       - '.github/workflows/planner-pages.yml'
