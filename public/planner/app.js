@@ -25,6 +25,14 @@
   const ENERGY = ['low', 'medium', 'high', 'variable'];
   const STATUSES = ['inbox', 'ready', 'in-progress', 'complete', 'waiting', 'postponed', 'canceled'];
   const OPEN_STATUSES = new Set(['inbox', 'ready', 'in-progress', 'waiting', 'postponed']);
+  const ASSIGNMENT_STATUSES = ['planned', 'in-progress', 'ready-to-submit', 'submitted', 'graded'];
+  const PROJECT_STATUSES = ['idea', 'active', 'paused', 'complete'];
+  const IDEA_ZONES = ['act', 'incubate', 'later'];
+  const MEMORY_CATEGORIES = ['Family', 'Home', 'Adventure', 'Funny', 'Milestone', 'Food', 'Random'];
+  const FAVORITE_TYPES = ['show', 'movie', 'music', 'book', 'game', 'food', 'place', 'product', 'other'];
+  const FAVORITE_STATUSES = ['current', 'paused', 'finished', 'loved', 'nope'];
+  const DATE_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+  const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
   const DASHBOARD_WIDGETS = ['now', 'planner', 'school', 'projects', 'home', 'void', 'progress'];
   const TODAY_SECTIONS = ['overview', 'anchors', 'workbench', 'review', 'void'];
@@ -73,6 +81,7 @@
   }
 
   function timeToMinutes(str) {
+    if (typeof str !== 'string' || !TIME_PATTERN.test(str)) return Number.NaN;
     const [h, m] = str.split(':').map(Number);
     return h * 60 + m;
   }
@@ -170,6 +179,189 @@
     return Array.isArray(value) ? value.filter(isPlainObject) : fallback.map(item => ({ ...item }));
   }
 
+  function nonEmptyString(value, fallback = '') {
+    const text = stringValue(value).trim();
+    return text || fallback;
+  }
+
+  function safeId(value, fallback) {
+    const cleaned = nonEmptyString(value)
+      .replace(/[^A-Za-z0-9_-]/g, '_')
+      .replace(/_+/g, '_')
+      .slice(0, 100);
+    return cleaned || fallback;
+  }
+
+  function dateValue(value, fallback = null) {
+    return typeof value === 'string' && DATE_PATTERN.test(value) ? value : fallback;
+  }
+
+  function timeValue(value, fallback = '00:00') {
+    return typeof value === 'string' && TIME_PATTERN.test(value) ? value : fallback;
+  }
+
+  function boundedNumber(value, min, max, fallback = 0) {
+    const number = finiteNumber(value, fallback);
+    return Math.max(min, Math.min(max, number));
+  }
+
+  function imageDataValue(value) {
+    if (typeof value !== 'string' || !value) return '';
+    return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(value) ? value : '';
+  }
+
+  function normalizeRoutineAnchors(value, fallback) {
+    const source = objectArray(value, fallback);
+    const usable = source.length ? source : fallback;
+    return usable.map((anchor, index) => {
+      const base = fallback[index] || fallback[0] || {};
+      const startTime = timeValue(anchor.startTime, timeValue(base.startTime, '00:00'));
+      const endTime = timeValue(anchor.endTime, timeValue(base.endTime, startTime));
+      const rawDuration = anchor.durationMinutes === null ? null : finiteNumber(anchor.durationMinutes, finiteNumber(base.durationMinutes, 30));
+      return {
+        id: safeId(anchor.id, safeId(base.id, `anchor_${index}`)),
+        name: nonEmptyString(anchor.name, nonEmptyString(base.name, `Anchor ${index + 1}`)),
+        startTime,
+        endTime,
+        durationMinutes: rawDuration === null ? null : Math.max(1, Math.round(rawDuration)),
+        type: nonEmptyString(anchor.type, nonEmptyString(base.type, 'anchor')),
+        description: stringValue(anchor.description, stringValue(base.description)),
+        order: boundedNumber(anchor.order, -1000, 1000, finiteNumber(base.order, index + 1)),
+        icon: nonEmptyString(anchor.icon, nonEmptyString(base.icon, '✦')).slice(0, 12),
+      };
+    }).sort((a, b) => a.order - b.order);
+  }
+
+  function normalizeSchoolAssignments(value, fallback) {
+    return objectArray(value, fallback).map((item, index) => ({
+      id: safeId(item.id, `school_${index}`),
+      course: nonEmptyString(item.course, 'Course').slice(0, 80),
+      title: nonEmptyString(item.title, `Untitled assignment ${index + 1}`),
+      status: ASSIGNMENT_STATUSES.includes(item.status) ? item.status : 'planned',
+      dueDate: dateValue(item.dueDate),
+      submissionStatus: stringValue(item.submissionStatus),
+      gradeOutcome: stringValue(item.gradeOutcome),
+      feedback: stringValue(item.feedback),
+      nextWritingStep: stringValue(item.nextWritingStep),
+      notes: stringValue(item.notes),
+    }));
+  }
+
+  function normalizeProjects(value, fallback) {
+    return objectArray(value, fallback).map((item, index) => ({
+      id: safeId(item.id, `project_${index}`),
+      name: nonEmptyString(item.name, `Untitled project ${index + 1}`),
+      area: nonEmptyString(item.area, 'Personal').slice(0, 100),
+      status: PROJECT_STATUSES.includes(item.status) ? item.status : 'idea',
+      priority: Object.prototype.hasOwnProperty.call(PRIORITY_WEIGHT, item.priority) ? item.priority : 'normal',
+      currentPhase: stringValue(item.currentPhase),
+      nextAction: stringValue(item.nextAction),
+      progressPercent: Math.round(boundedNumber(item.progressPercent, 0, 100, 0)),
+      notes: stringValue(item.notes),
+    }));
+  }
+
+  function normalizeBrainDumps(value) {
+    return objectArray(value).map((item, index) => ({
+      id: safeId(item.id, `dump_${index}`),
+      title: nonEmptyString(item.title, 'Brain dump'),
+      createdAt: finiteNumber(item.createdAt, Date.now() + index),
+      rawText: stringValue(item.rawText),
+      status: item.status === 'processed' ? 'processed' : 'unprocessed',
+      extractedTaskIds: Array.isArray(item.extractedTaskIds)
+        ? item.extractedTaskIds.filter(id => typeof id === 'string' && id.trim()).map((id, taskIndex) => safeId(id, `task_ref_${index}_${taskIndex}`))
+        : [],
+    }));
+  }
+
+  function normalizeIdeas(value) {
+    return objectArray(value).map((item, index) => ({
+      id: safeId(item.id, `idea_${index}`),
+      title: nonEmptyString(item.title, `Untitled idea ${index + 1}`),
+      zone: IDEA_ZONES.includes(item.zone) ? item.zone : 'incubate',
+      notes: stringValue(item.notes),
+      createdAt: finiteNumber(item.createdAt, Date.now() + index),
+    }));
+  }
+
+  function normalizeMemories(value) {
+    return objectArray(value).map((item, index) => ({
+      id: safeId(item.id, `memory_${index}`),
+      date: dateValue(item.date, isoDateLocal()),
+      title: nonEmptyString(item.title, `Memory ${index + 1}`),
+      caption: stringValue(item.caption),
+      category: MEMORY_CATEGORIES.includes(item.category) ? item.category : 'Random',
+      people: stringValue(item.people),
+      favorite: item.favorite === true,
+      imageDataUrl: imageDataValue(item.imageDataUrl),
+      notes: stringValue(item.notes),
+    }));
+  }
+
+  function normalizeFavorites(value) {
+    return objectArray(value).map((item, index) => {
+      const rating = finiteNumber(item.rating, 0);
+      return {
+        id: safeId(item.id, `favorite_${index}`),
+        type: FAVORITE_TYPES.includes(item.type) ? item.type : 'other',
+        title: nonEmptyString(item.title, `Untitled favorite ${index + 1}`),
+        status: FAVORITE_STATUSES.includes(item.status) ? item.status : 'current',
+        rating: rating >= 1 && rating <= 5 ? rating : null,
+        notes: stringValue(item.notes),
+        imageDataUrl: imageDataValue(item.imageDataUrl),
+      };
+    });
+  }
+
+  function normalizeDecorations(value) {
+    return objectArray(value).flatMap((item, index) => {
+      if (!ROUTES.some(([id]) => id === item.page) || !STICKER_TYPES.includes(item.type)) return [];
+      return [{
+        id: safeId(item.id, `sticker_${index}`),
+        page: item.page,
+        type: item.type,
+        x: Math.round(boundedNumber(item.x, -5000, 5000, 80)),
+        y: Math.round(boundedNumber(item.y, -5000, 5000, 160)),
+        rotate: boundedNumber(item.rotate, -360, 360, 0),
+        scale: boundedNumber(item.scale, .4, 2, 1),
+      }];
+    });
+  }
+
+  function normalizeScrapbookPositions(value) {
+    if (!isPlainObject(value)) return {};
+    const result = {};
+    for (const [key, position] of Object.entries(value)) {
+      if (!isPlainObject(position)) continue;
+      const id = safeId(key, '');
+      if (!id) continue;
+      result[id] = {
+        x: Math.round(boundedNumber(position.x, -5000, 5000, 0)),
+        y: Math.round(boundedNumber(position.y, -5000, 5000, 0)),
+        rotate: boundedNumber(position.rotate, -360, 360, 0),
+      };
+    }
+    return result;
+  }
+
+  function normalizeMonthNotes(value) {
+    if (!isPlainObject(value)) return {};
+    const result = {};
+    for (const [key, note] of Object.entries(value)) {
+      if (/^\d{4}-(0[1-9]|1[0-2])$/.test(key) && typeof note === 'string') result[key] = note;
+    }
+    return result;
+  }
+
+  function normalizeSectionThemes(value) {
+    if (!isPlainObject(value)) return {};
+    const result = {};
+    for (const [page, theme] of Object.entries(value)) {
+      if (ROUTES.some(([id]) => id === page) && ACCENT_THEMES.includes(theme)) result[page] = theme;
+    }
+    return result;
+  }
+
   function normalizeDailyEntries(value, freshEntries) {
     const source = isPlainObject(value) ? value : freshEntries;
     const result = {};
@@ -220,19 +412,19 @@
     const source = objectArray(value, fallback);
     return source.map((task, index) => ({
       ...task,
-      id: stringValue(task.id, uid('task')),
-      title: stringValue(task.title, `Untitled task ${index + 1}`),
+      id: safeId(task.id, `task_${index}`),
+      title: nonEmptyString(task.title, `Untitled task ${index + 1}`),
       description: stringValue(task.description),
       status: STATUSES.includes(task.status) ? task.status : 'inbox',
       priority: Object.prototype.hasOwnProperty.call(PRIORITY_WEIGHT, task.priority) ? task.priority : 'normal',
       category: stringValue(task.category, 'personal'),
-      scheduledDate: typeof task.scheduledDate === 'string' && task.scheduledDate ? task.scheduledDate : null,
-      deadline: typeof task.deadline === 'string' && task.deadline ? task.deadline : null,
+      scheduledDate: dateValue(task.scheduledDate),
+      deadline: dateValue(task.deadline),
       durationMinutes: [30, 60].includes(Number(task.durationMinutes)) ? Number(task.durationMinutes) : 30,
       timerType: stringValue(task.timerType, 'standard'),
       nextStep: stringValue(task.nextStep),
       waitingOn: stringValue(task.waitingOn),
-      projectId: typeof task.projectId === 'string' && task.projectId ? task.projectId : null,
+      projectId: typeof task.projectId === 'string' && task.projectId.trim() ? safeId(task.projectId, null) : null,
       createdAt: finiteNumber(task.createdAt, Date.now() + index),
       completedAt: typeof task.completedAt === 'number' && Number.isFinite(task.completedAt) ? task.completedAt : null,
     }));
@@ -250,9 +442,9 @@
       sound: settingsSource.sound !== false,
       backgroundPreset: BACKGROUND_PRESETS.includes(settingsSource.backgroundPreset) ? settingsSource.backgroundPreset : fresh.settings.backgroundPreset,
       accentTheme: ACCENT_THEMES.includes(settingsSource.accentTheme) ? settingsSource.accentTheme : fresh.settings.accentTheme,
-      customBackgroundDataUrl: stringValue(settingsSource.customBackgroundDataUrl),
-      heroPhotoDataUrl: stringValue(settingsSource.heroPhotoDataUrl),
-      sectionThemes: isPlainObject(settingsSource.sectionThemes) ? { ...settingsSource.sectionThemes } : {},
+      customBackgroundDataUrl: imageDataValue(settingsSource.customBackgroundDataUrl),
+      heroPhotoDataUrl: imageDataValue(settingsSource.heroPhotoDataUrl),
+      sectionThemes: normalizeSectionThemes(settingsSource.sectionThemes),
     };
 
     const homeSource = isPlainObject(source.home) ? source.home : {};
@@ -262,8 +454,8 @@
       notes: stringValue(homeSource.notes),
       groceries: objectArray(homeSource.groceries).map((item, index) => ({
         ...item,
-        id: stringValue(item.id, `grocery_${index}`),
-        title: stringValue(item.title, 'Untitled item'),
+        id: safeId(item.id, `grocery_${index}`),
+        title: nonEmptyString(item.title, 'Untitled item'),
         done: item.done === true,
       })),
       householdProjects: objectArray(homeSource.householdProjects),
@@ -303,8 +495,8 @@
       plannerEditMode: uiSource.plannerEditMode === true,
       todaySectionOrder: [...new Set([...todaySectionOrder, ...TODAY_SECTIONS])],
       scrapbookBoardMode: uiSource.scrapbookBoardMode === true,
-      scrapbookPositions: isPlainObject(uiSource.scrapbookPositions) ? { ...uiSource.scrapbookPositions } : {},
-      monthNotes: isPlainObject(uiSource.monthNotes) ? { ...uiSource.monthNotes } : {},
+      scrapbookPositions: normalizeScrapbookPositions(uiSource.scrapbookPositions),
+      monthNotes: normalizeMonthNotes(uiSource.monthNotes),
     };
 
     return {
@@ -312,14 +504,14 @@
       settings,
       tasks: normalizeTasks(source.tasks, fresh.tasks),
       dailyEntries: normalizeDailyEntries(source.dailyEntries, fresh.dailyEntries),
-      routineAnchors: objectArray(source.routineAnchors, fresh.routineAnchors),
-      schoolAssignments: objectArray(source.schoolAssignments, fresh.schoolAssignments),
-      projects: objectArray(source.projects, fresh.projects),
-      brainDumps: objectArray(source.brainDumps),
-      ideas: objectArray(source.ideas),
-      memories: objectArray(source.memories),
-      favorites: objectArray(source.favorites),
-      decorations: objectArray(source.decorations),
+      routineAnchors: normalizeRoutineAnchors(source.routineAnchors, fresh.routineAnchors),
+      schoolAssignments: normalizeSchoolAssignments(source.schoolAssignments, fresh.schoolAssignments),
+      projects: normalizeProjects(source.projects, fresh.projects),
+      brainDumps: normalizeBrainDumps(source.brainDumps),
+      ideas: normalizeIdeas(source.ideas),
+      memories: normalizeMemories(source.memories),
+      favorites: normalizeFavorites(source.favorites),
+      decorations: normalizeDecorations(source.decorations),
       home,
       weeklyReviews: normalizeWeeklyReviews(source.weeklyReviews),
       timer,
