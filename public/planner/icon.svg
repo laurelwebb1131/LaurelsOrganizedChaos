@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Laurel's Organized Chaos</title>
+  <desc id="desc">Black gothic planner icon with a pink crescent moon, silver stars, and LOC lettering.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff3ca6"/>
+      <stop offset="1" stop-color="#9d66ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="104" fill="#100d14"/>
+  <rect x="22" y="22" width="468" height="468" rx="88" fill="none" stroke="url(#g)" stroke-width="10"/>
+  <circle cx="268" cy="191" r="104" fill="#ff3ca6"/>
+  <circle cx="310" cy="158" r="104" fill="#100d14"/>
+  <g fill="#d9d7e3">
+    <path d="M112 114l9 25 25 9-25 9-9 25-9-25-25-9 25-9z"/>
+    <path d="M405 165l7 19 19 7-19 7-7 19-7-19-19-7 19-7z"/>
+    <path d="M385 285l5 14 14 5-14 5-5 14-5-14-14-5 14-5z"/>
+  </g>
+  <text x="256" y="372" text-anchor="middle" fill="#f7f1f6" font-family="Georgia, serif" font-size="112" font-weight="700" letter-spacing="8">LOC</text>
+  <path d="M134 410c73 27 171 27 244 0" fill="none" stroke="#ff3ca6" stroke-width="8" stroke-linecap="round"/>
+</svg>
