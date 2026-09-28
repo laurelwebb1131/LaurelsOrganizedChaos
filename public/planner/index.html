@@ -7,17 +7,13 @@
   <meta name="description" content="Laurel's Organized Chaos Planner" />
   <title>Laurel's Organized Chaos Planner</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Planner navigation">
       <div class="brand-mini">
         <div class="brand-mark">LOC</div>
-        <div>
-          <strong>Laurel's</strong>
-          <span>Organized Chaos</span>
-        </div>
+        <div><strong>Laurel's</strong><span>Organized Chaos</span></div>
       </div>
       <nav id="main-nav"></nav>
       <div class="sidebar-footer">
@@ -30,7 +26,11 @@
       <div class="mobile-title">Laurel's Organized Chaos</div>
       <button class="icon-btn" id="quick-add-mobile" aria-label="Quick add task" type="button">＋</button>
     </header>
-    <main id="main-content" tabindex="-1"></main>
+    <main id="main-content" tabindex="-1">
+      <div style="padding:32px;font-family:system-ui;background:#100d14;color:white;min-height:100vh">
+        Loading the chaos…
+      </div>
+    </main>
   </div>
   <button class="floating-add" id="floating-add" type="button" aria-label="Quick add task">＋</button>
   <div class="modal-backdrop hidden" id="modal-backdrop" aria-hidden="true">
@@ -43,6 +43,47 @@
     </section>
   </div>
   <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script src="app.js"></script>
+
+  <script>
+    async function readText(paths) {
+      const parts = await Promise.all(paths.map(async (path) => {
+        const response = await fetch(path, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Could not load ' + path);
+        return (await response.text()).trim();
+      }));
+      return parts.join('');
+    }
+
+    async function gunzipBase64(paths) {
+      if (!('DecompressionStream' in window)) {
+        throw new Error('This browser does not support DecompressionStream. Please use a current Chrome, Edge, or Firefox.');
+      }
+      const b64 = await readText(paths);
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return await new Response(stream).text();
+    }
+
+    (async () => {
+      try {
+        const [css, js] = await Promise.all([
+          gunzipBase64(['./payload/style-0.txt', './payload/style-1.txt']),
+          gunzipBase64(['./payload/app-0.txt', './payload/app-1.txt', './payload/app-2.txt', './payload/app-3.txt'])
+        ]);
+        const style = document.createElement('style');
+        style.textContent = css;
+        document.head.appendChild(style);
+        new Function(js)();
+      } catch (error) {
+        console.error(error);
+        document.getElementById('main-content').innerHTML =
+          '<div style="padding:32px;font-family:system-ui;background:#100d14;color:#fff;min-height:100vh">' +
+          '<h1>The planner tripped over its own cape.</h1><p>' + String(error.message || error) +
+          '</p><p>Refresh the page in a current Chrome or Edge browser.</p></div>';
+      }
+    })();
+  </script>
 </body>
 </html>
