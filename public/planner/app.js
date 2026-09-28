@@ -153,31 +153,177 @@
     };
   }
 
+  function isPlainObject(value) {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function stringValue(value, fallback = '') {
+    return typeof value === 'string' ? value : fallback;
+  }
+
+  function finiteNumber(value, fallback = 0) {
+    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+  }
+
+  function objectArray(value, fallback = []) {
+    return Array.isArray(value) ? value.filter(isPlainObject) : fallback.map(item => ({ ...item }));
+  }
+
+  function normalizeDailyEntries(value, freshEntries) {
+    const source = isPlainObject(value) ? value : freshEntries;
+    const result = {};
+    for (const [key, entry] of Object.entries(source)) {
+      if (!isPlainObject(entry)) continue;
+      result[key] = {
+        date: stringValue(entry.date, key),
+        energy: ENERGY.includes(entry.energy) ? entry.energy : 'medium',
+        moodTags: Array.isArray(entry.moodTags) ? entry.moodTags.filter(tag => MOODS.includes(tag)) : [],
+        currentActivity: stringValue(entry.currentActivity),
+        nextActivity: stringValue(entry.nextActivity),
+        currentPriorities: stringValue(entry.currentPriorities),
+        completedActivities: Array.isArray(entry.completedActivities) ? entry.completedActivities.filter(item => typeof item === 'string') : [],
+        unfinishedActivities: Array.isArray(entry.unfinishedActivities) ? entry.unfinishedActivities.filter(item => typeof item === 'string') : [],
+        smallWin: stringValue(entry.smallWin),
+        whatHelped: stringValue(entry.whatHelped),
+        whatDrainedMe: stringValue(entry.whatDrainedMe),
+        notes: stringValue(entry.notes),
+      };
+    }
+    return Object.keys(result).length ? result : { ...freshEntries };
+  }
+
+  function normalizeWeeklyReviews(value) {
+    if (!isPlainObject(value)) return {};
+    const result = {};
+    for (const [key, review] of Object.entries(value)) {
+      if (!isPlainObject(review)) continue;
+      const top3 = Array.isArray(review.top3)
+        ? review.top3.slice(0, 3).map(item => stringValue(item))
+        : [];
+      while (top3.length < 3) top3.push('');
+      result[key] = {
+        weekStarting: stringValue(review.weekStarting, key),
+        top3,
+        schoolFocus: stringValue(review.schoolFocus),
+        homeFocus: stringValue(review.homeFocus),
+        projectFocus: stringValue(review.projectFocus),
+        wins: stringValue(review.wins),
+        carryForward: stringValue(review.carryForward),
+        notes: stringValue(review.notes),
+      };
+    }
+    return result;
+  }
+
+  function normalizeTasks(value, fallback) {
+    const source = objectArray(value, fallback);
+    return source.map((task, index) => ({
+      ...task,
+      id: stringValue(task.id, uid('task')),
+      title: stringValue(task.title, `Untitled task ${index + 1}`),
+      description: stringValue(task.description),
+      status: STATUSES.includes(task.status) ? task.status : 'inbox',
+      priority: Object.prototype.hasOwnProperty.call(PRIORITY_WEIGHT, task.priority) ? task.priority : 'normal',
+      category: stringValue(task.category, 'personal'),
+      scheduledDate: typeof task.scheduledDate === 'string' && task.scheduledDate ? task.scheduledDate : null,
+      deadline: typeof task.deadline === 'string' && task.deadline ? task.deadline : null,
+      durationMinutes: [30, 60].includes(Number(task.durationMinutes)) ? Number(task.durationMinutes) : 30,
+      timerType: stringValue(task.timerType, 'standard'),
+      nextStep: stringValue(task.nextStep),
+      waitingOn: stringValue(task.waitingOn),
+      projectId: typeof task.projectId === 'string' && task.projectId ? task.projectId : null,
+      createdAt: finiteNumber(task.createdAt, Date.now() + index),
+      completedAt: typeof task.completedAt === 'number' && Number.isFinite(task.completedAt) ? task.completedAt : null,
+    }));
+  }
+
   function hydrateState(parsed) {
     const fresh = defaultState();
-    parsed.settings = { ...fresh.settings, ...(parsed.settings || {}) };
-    parsed.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : fresh.tasks;
-    parsed.dailyEntries = parsed.dailyEntries || fresh.dailyEntries;
-    parsed.routineAnchors = Array.isArray(parsed.routineAnchors) ? parsed.routineAnchors : fresh.routineAnchors;
-    parsed.schoolAssignments = Array.isArray(parsed.schoolAssignments) ? parsed.schoolAssignments : fresh.schoolAssignments;
-    parsed.projects = Array.isArray(parsed.projects) ? parsed.projects : fresh.projects;
-    parsed.brainDumps = Array.isArray(parsed.brainDumps) ? parsed.brainDumps : [];
-    parsed.ideas = Array.isArray(parsed.ideas) ? parsed.ideas : [];
-    parsed.memories = Array.isArray(parsed.memories) ? parsed.memories : [];
-    parsed.favorites = Array.isArray(parsed.favorites) ? parsed.favorites : [];
-    parsed.decorations = Array.isArray(parsed.decorations) ? parsed.decorations : [];
-    parsed.home = { ...fresh.home, ...(parsed.home || {}) };
-    parsed.weeklyReviews = parsed.weeklyReviews || {};
-    parsed.timer = { ...fresh.timer, ...(parsed.timer || {}) };
-    parsed.ui = { ...fresh.ui, ...(parsed.ui || {}) };
-    const order = Array.isArray(parsed.ui.dashboardOrder) ? parsed.ui.dashboardOrder.filter(id => DASHBOARD_WIDGETS.includes(id)) : [];
-    parsed.ui.dashboardOrder = [...order, ...DASHBOARD_WIDGETS.filter(id => !order.includes(id))];
-    parsed.ui.monthNotes = parsed.ui.monthNotes || {};
-    const todayOrder = Array.isArray(parsed.ui.todaySectionOrder) ? parsed.ui.todaySectionOrder.filter(id => TODAY_SECTIONS.includes(id)) : [];
-    parsed.ui.todaySectionOrder = [...todayOrder, ...TODAY_SECTIONS.filter(id => !todayOrder.includes(id))];
-    parsed.ui.scrapbookPositions = parsed.ui.scrapbookPositions || {};
-    parsed.settings.sectionThemes = parsed.settings.sectionThemes || {};
-    return parsed;
+    const source = isPlainObject(parsed) ? parsed : {};
+
+    const settingsSource = isPlainObject(source.settings) ? source.settings : {};
+    const settings = {
+      ...fresh.settings,
+      ...settingsSource,
+      themeIntensity: settingsSource.themeIntensity === 'quiet' ? 'quiet' : 'full',
+      sound: settingsSource.sound !== false,
+      backgroundPreset: BACKGROUND_PRESETS.includes(settingsSource.backgroundPreset) ? settingsSource.backgroundPreset : fresh.settings.backgroundPreset,
+      accentTheme: ACCENT_THEMES.includes(settingsSource.accentTheme) ? settingsSource.accentTheme : fresh.settings.accentTheme,
+      customBackgroundDataUrl: stringValue(settingsSource.customBackgroundDataUrl),
+      heroPhotoDataUrl: stringValue(settingsSource.heroPhotoDataUrl),
+      sectionThemes: isPlainObject(settingsSource.sectionThemes) ? { ...settingsSource.sectionThemes } : {},
+    };
+
+    const homeSource = isPlainObject(source.home) ? source.home : {};
+    const home = {
+      ...fresh.home,
+      ...homeSource,
+      notes: stringValue(homeSource.notes),
+      groceries: objectArray(homeSource.groceries).map((item, index) => ({
+        ...item,
+        id: stringValue(item.id, `grocery_${index}`),
+        title: stringValue(item.title, 'Untitled item'),
+        done: item.done === true,
+      })),
+      householdProjects: objectArray(homeSource.householdProjects),
+    };
+
+    const timerSource = isPlainObject(source.timer) ? source.timer : {};
+    const timer = {
+      ...fresh.timer,
+      running: timerSource.running === true,
+      paused: timerSource.paused === true,
+      endAt: typeof timerSource.endAt === 'number' && Number.isFinite(timerSource.endAt) ? timerSource.endAt : null,
+      remainingMs: Math.max(0, finiteNumber(timerSource.remainingMs, fresh.timer.remainingMs)),
+      durationMinutes: [30, 60].includes(Number(timerSource.durationMinutes)) ? Number(timerSource.durationMinutes) : 30,
+      taskId: typeof timerSource.taskId === 'string' && timerSource.taskId ? timerSource.taskId : null,
+    };
+    if (timer.running && !timer.paused && !timer.endAt) {
+      timer.endAt = Date.now() + timer.remainingMs;
+    }
+
+    const uiSource = isPlainObject(source.ui) ? source.ui : {};
+    const dashboardOrder = Array.isArray(uiSource.dashboardOrder)
+      ? uiSource.dashboardOrder.filter(id => DASHBOARD_WIDGETS.includes(id))
+      : [];
+    const todaySectionOrder = Array.isArray(uiSource.todaySectionOrder)
+      ? uiSource.todaySectionOrder.filter(id => TODAY_SECTIONS.includes(id))
+      : [];
+    const calendarMonth = typeof uiSource.calendarMonth === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(uiSource.calendarMonth)
+      ? uiSource.calendarMonth
+      : fresh.ui.calendarMonth;
+    const ui = {
+      ...fresh.ui,
+      ...uiSource,
+      calendarMonth,
+      scrapbookFavoritesOnly: uiSource.scrapbookFavoritesOnly === true,
+      dashboardOrder: [...new Set([...dashboardOrder, ...DASHBOARD_WIDGETS])],
+      dashboardEditMode: uiSource.dashboardEditMode === true,
+      plannerEditMode: uiSource.plannerEditMode === true,
+      todaySectionOrder: [...new Set([...todaySectionOrder, ...TODAY_SECTIONS])],
+      scrapbookBoardMode: uiSource.scrapbookBoardMode === true,
+      scrapbookPositions: isPlainObject(uiSource.scrapbookPositions) ? { ...uiSource.scrapbookPositions } : {},
+      monthNotes: isPlainObject(uiSource.monthNotes) ? { ...uiSource.monthNotes } : {},
+    };
+
+    return {
+      version: 1,
+      settings,
+      tasks: normalizeTasks(source.tasks, fresh.tasks),
+      dailyEntries: normalizeDailyEntries(source.dailyEntries, fresh.dailyEntries),
+      routineAnchors: objectArray(source.routineAnchors, fresh.routineAnchors),
+      schoolAssignments: objectArray(source.schoolAssignments, fresh.schoolAssignments),
+      projects: objectArray(source.projects, fresh.projects),
+      brainDumps: objectArray(source.brainDumps),
+      ideas: objectArray(source.ideas),
+      memories: objectArray(source.memories),
+      favorites: objectArray(source.favorites),
+      decorations: objectArray(source.decorations),
+      home,
+      weeklyReviews: normalizeWeeklyReviews(source.weeklyReviews),
+      timer,
+      ui,
+    };
   }
 
   function loadState() {
