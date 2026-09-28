@@ -4,11 +4,11 @@ import { useLoader } from '@react-three/fiber'
 import { TextureLoader } from 'three'
 import { Suspense, useEffect, useState } from 'react'
 import './styles.css'
-import { defaultWorldState, exportWorldState, importWorldState, loadWorldState, resetWorldState, saveWorldState } from './worldState'
-import type { Companion } from './worldState'
+import { defaultWorldState, exportWorldState, importWorldState, isWorldLocationId, loadWorldState, resetWorldState, saveWorldState } from './worldState'
+import type { Companion, WorldLocationId } from './worldState'
 import { requestCompanionReply } from './companionProvider'
 
-type LocationId = 'library' | 'home' | 'university' | 'love-doctor'
+type LocationId = WorldLocationId
 
 type Location = {
   id: LocationId
@@ -27,21 +27,42 @@ const locations: Location[] = [
   { id: 'love-doctor', name: 'The Love Doctor', domain: 'Relationship goals', description: 'A thoughtful room for connection, communication, and care.', icon: '♡', color: '#ff9dcd', position: [1.45, -1.3, 1.8] },
 ]
 
+type HashLocation = { kind: 'realm' | 'room'; location: LocationId }
+
+function readHashLocation(): HashLocation | null {
+  const match = window.location.hash.match(/^#(realm|room)\/([^/?#]+)$/)
+  if (!match || !isWorldLocationId(match[2])) return null
+  return { kind: match[1] as HashLocation['kind'], location: match[2] }
+}
+
+function formatWorldDate(date = new Date()) {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  }).format(date).toUpperCase()
+}
+
 function App() {
   const [worldState, setWorldState] = useState(loadWorldState)
-  const [selectedLocation, setSelectedLocation] = useState<LocationId>(() => {
-    const value = window.location.hash.replace('#realm/', '')
-    return locations.some((location) => location.id === value) ? value as LocationId : 'library'
-  })
+  const [selectedLocation, setSelectedLocation] = useState<LocationId>(() => readHashLocation()?.location ?? worldState.lastLocation)
   const [hoveredLocation, setHoveredLocation] = useState<LocationId | null>(null)
-  const [showLocationPanel, setShowLocationPanel] = useState(true)
+  const [showLocationPanel, setShowLocationPanel] = useState(() => readHashLocation()?.kind !== 'room')
   const [showPeople, setShowPeople] = useState(true)
   const [showCodex, setShowCodex] = useState(false)
   const [activeRoom, setActiveRoom] = useState<LocationId | null>(() => {
-    const value = window.location.hash.replace('#room/', '')
-    return value === 'library' || value === 'home' ? value : null
+    const hash = readHashLocation()
+    return hash?.kind === 'room' ? hash.location : null
   })
   const active = locations.find((location) => location.id === selectedLocation) ?? locations[0]
+  const activeGoals = worldState.goals.filter((goal) => goal.realm === active.name)
+  const activeHabits = worldState.habits.filter((habit) => habit.realm === active.name)
+  const activeProgress = activeGoals.length
+    ? Math.round(activeGoals.reduce((sum, goal) => sum + goal.progress, 0) / activeGoals.length)
+    : 0
+  const activeSecondaryCount = active.id === 'library' ? worldState.savedIdeas.length : activeHabits.length
+  const activeSecondaryLabel = active.id === 'library' ? 'saved ideas' : 'habits tracked'
+  const worldDate = formatWorldDate()
   const [storageError, setStorageError] = useState('')
   useEffect(() => { try { saveWorldState(worldState); setStorageError('') } catch (error) { setStorageError(error instanceof Error ? error.message : 'World could not be saved.') } }, [worldState])
   useEffect(() => {
@@ -53,20 +74,27 @@ function App() {
   }, [])
   useEffect(() => {
     const onHashChange = () => {
-      const hash = window.location.hash
-      if (hash.startsWith('#realm/')) setSelectedLocation(hash.replace('#realm/', '') as LocationId)
-      if (hash.startsWith('#room/')) setActiveRoom(hash.replace('#room/', '') as LocationId)
+      const hash = readHashLocation()
+      if (!hash) return
+      setSelectedLocation(hash.location)
+      setActiveRoom(hash.kind === 'room' ? hash.location : null)
+      setShowLocationPanel(hash.kind !== 'room')
+      setWorldState((state) => state.lastLocation === hash.location ? state : { ...state, lastLocation: hash.location })
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
   const selectLocation = (location: LocationId) => {
     setSelectedLocation(location)
+    setActiveRoom(null)
     setShowLocationPanel(true)
+    setWorldState((state) => state.lastLocation === location ? state : { ...state, lastLocation: location })
     window.location.hash = `realm/${location}`
   }
   const enterRoom = (room: LocationId) => {
+    setSelectedLocation(room)
     setActiveRoom(room)
+    setWorldState((state) => state.lastLocation === room ? state : { ...state, lastLocation: room })
     window.location.hash = `room/${room}`
   }
   const leaveRoom = () => {
@@ -101,7 +129,7 @@ function App() {
 
       <header className="world-header">
         <div className="world-brand"><span className="brand-sigil">☾</span><div><strong>Hearthwise</strong><small>your life, in orbit</small></div></div>
-        <div className="world-status"><span className="status-pulse" /> WORLD ONLINE <b>·</b> TUESDAY, OCT 24</div>
+        <div className="world-status"><span className="status-pulse" /> WORLD ONLINE <b>·</b> {worldDate}</div>
         <button className="profile-button"><span className="profile-orb">LW</span><span className="profile-name">Laurel Webb</span><span>⌄</span></button>
       </header>
 
@@ -124,14 +152,14 @@ function App() {
           if (phrase === 'RESET WORLD') setWorldState(resetWorldState())
         }}><span>↺</span> Reset world</button>
         <button className="nav-tab" onClick={() => setShowCodex(true)}><span>⌘</span> Invite a familiar</button>
-        <div className="nav-foot"><span className="tiny-moon">◐</span><div><strong>Waning moon</strong><small>Good night for tending</small></div></div>
+        <div className="nav-foot"><span className="tiny-moon">◐</span><div><strong>Night journal</strong><small>Reflection space</small></div></div>
       </aside>
 
       <section className="world-copy">
-        <div className="copy-kicker"><span>✦</span> TUESDAY · WANING MOON · MYTHIC EARTH</div>
+        <div className="copy-kicker"><span>✦</span> {worldDate} · MYTHIC EARTH</div>
         <h1>Welcome back,<br /><em>Laurel.</em></h1>
         <p>This is your world. Every place holds a part of the life you are making, and every legend may be real.</p>
-        <div className="orbit-line"><span /><b>4</b> realms active <i /> <b>7</b> day streak</div>
+        <div className="orbit-line"><span /><b>{locations.length}</b> realms active <i /> <b>{worldState.goals.length}</b> goals tracked</div>
       </section>
 
       <div className="realm-dock" aria-label="Choose a realm">
@@ -142,7 +170,7 @@ function App() {
         <div className="panel-topline"><span className="panel-label">SELECTED REALM</span><button className="close-button" onClick={() => setShowLocationPanel(false)} aria-label="Close selected realm panel">×</button></div>
         <div className="location-heading"><span className="location-glyph" style={{ color: active.color, borderColor: active.color }}>{active.icon}</span><div><h2>{active.name}</h2><span>{active.domain}</span></div></div>
         <p>{active.description}</p>
-        <div className="location-stats"><div><strong>{active.id === 'library' ? '68%' : active.id === 'home' ? '4/6' : active.id === 'university' ? '42%' : '3'}</strong><small>{active.id === 'love-doctor' ? 'open conversations' : 'current progress'}</small></div><div><strong>{active.id === 'library' ? '12' : '5'}</strong><small>ideas to explore</small></div></div>
+        <div className="location-stats"><div><strong>{activeProgress}%</strong><small>goal progress</small></div><div><strong>{activeSecondaryCount}</strong><small>{activeSecondaryLabel}</small></div></div>
         <button className="enter-button" onClick={() => (active.id === 'home' || active.id === 'library' || active.id === 'university' || active.id === 'love-doctor') && enterRoom(active.id)}>Enter {active.name} <span>↗</span></button>
         <button className="companion-link" onClick={() => setShowPeople((visible) => !visible)}><span className={showPeople ? 'toggle on' : 'toggle'} /> Show life companions <b>{showPeople ? 'on' : 'off'}</b></button>
       </section>}
