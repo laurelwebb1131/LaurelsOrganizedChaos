@@ -3,14 +3,21 @@
   "name": "Laurel's Organized Chaos Planner",
   "short_name": "Organized Chaos",
   "description": "A local-first gothic scrapbook planner for daily life, school, projects, home, ideas, goals, and memories.",
-  "start_url": "./#dashboard",
+  "start_url": "./#cover",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "orientation": "any",
   "background_color": "#100d14",
   "theme_color": "#100d14",
-  "categories": ["productivity", "lifestyle", "education"],
+  "categories": [
+    "productivity",
+    "lifestyle",
+    "education"
+  ],
   "icons": [
     {
       "src": "./icon.svg",
