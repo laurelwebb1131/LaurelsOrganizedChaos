@@ -1065,12 +1065,44 @@
   }
 
   function exportJson() {
-    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`organized-chaos-backup-${isoDateLocal()}.json`;a.click();URL.revokeObjectURL(url);toast('Backup exported.');
+    const payload = {
+      ...state,
+      backupMeta: {
+        schema: 'laurels-organized-chaos-planner',
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString()
+      }
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `organized-chaos-backup-${isoDateLocal()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Backup exported.');
   }
 
   async function importJson(file) {
-    if(!file)return;
-    try { const text=await file.text(); const parsed=JSON.parse(text); if(!parsed || parsed.version!==1 || !Array.isArray(parsed.tasks) || !parsed.dailyEntries) throw new Error('This does not look like a valid Organized Chaos planner backup.'); if(!confirm('Import this backup and replace current local planner data?'))return; state=hydrateState(parsed);saveState({render:true});toast('Backup imported.'); } catch(err){alert(err.message);}
+    if (!file) return;
+    try {
+      if (file.size > 15 * 1024 * 1024) throw new Error('That backup is unusually large. Choose an Organized Chaos JSON backup under 15 MB.');
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const looksValid = parsed && parsed.version === 1 && Array.isArray(parsed.tasks) && parsed.dailyEntries && typeof parsed.dailyEntries === 'object';
+      if (!looksValid) throw new Error('This does not look like a valid Organized Chaos planner backup.');
+      const restored = hydrateState(parsed);
+      if (!Array.isArray(restored.routineAnchors) || !Array.isArray(restored.projects) || !Array.isArray(restored.schoolAssignments)) {
+        throw new Error('The backup is missing required planner data.');
+      }
+      if (!confirm('Import this backup and replace current local planner data? A temporary pre-import recovery copy will be saved in this browser first.')) return;
+      try { localStorage.setItem(STORAGE_KEY + '-pre-import', JSON.stringify(state)); } catch (_) {}
+      state = restored;
+      saveState({ render: true });
+      toast('Backup imported.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not import that backup.');
+    }
   }
 
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');}
