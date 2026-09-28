@@ -1079,20 +1079,31 @@
 
   function cap(s) { return s ? s[0].toUpperCase()+s.slice(1) : ''; }
 
+  let modalReturnFocus = null;
+
   function openModal(title, html) {
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').innerHTML = html;
+    modalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const titleEl = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
     const backdrop = document.getElementById('modal-backdrop');
+    if (!titleEl || !body || !backdrop) return;
+    titleEl.textContent = title;
+    body.innerHTML = html;
     backdrop.classList.remove('hidden');
     backdrop.setAttribute('aria-hidden','false');
-    setTimeout(() => document.getElementById('modal-close').focus(), 0);
+    setTimeout(() => document.getElementById('modal-close')?.focus(), 0);
   }
 
   function closeModal() {
     const backdrop = document.getElementById('modal-backdrop');
+    const body = document.getElementById('modal-body');
+    if (!backdrop || !body) return;
     backdrop.classList.add('hidden');
     backdrop.setAttribute('aria-hidden','true');
-    document.getElementById('modal-body').innerHTML = '';
+    body.innerHTML = '';
+    const returnTarget = modalReturnFocus;
+    modalReturnFocus = null;
+    if (returnTarget?.isConnected) returnTarget.focus();
   }
 
   function quickTaskModal(prefill = {}) {
@@ -1136,27 +1147,50 @@
   }
 
   function brainLinesModal(dump) {
+    if (!isPlainObject(dump) || typeof dump.rawText !== 'string') {
+      toast('That brain dump could not be opened.');
+      return;
+    }
     const lines = dump.rawText.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,30);
-    openModal('Turn Lines into Tasks', `<form id="brain-lines-form" data-id="${dump.id}" class="form-grid"><p class="muted">Select only lines that are genuinely tasks. Raw brain dump text stays untouched.</p>${lines.map((line,i)=>`<label style="display:flex;grid-template-columns:auto 1fr;align-items:start"><input type="checkbox" name="line" value="${i}" style="width:auto;margin-top:3px"><span>${escapeHtml(line)}</span></label>`).join('')}<input type="hidden" name="linesJson" value="${escapeHtml(JSON.stringify(lines))}"><button class="btn" type="submit">Create Selected Tasks</button></form>`);
+    if (!lines.length) {
+      toast('There are no non-empty lines to turn into tasks.');
+      return;
+    }
+    openModal('Turn Lines into Tasks', `<form id="brain-lines-form" data-id="${escapeHtml(dump.id || '')}" class="form-grid"><p class="muted">Select only lines that are genuinely tasks. Raw brain dump text stays untouched.</p>${lines.map((line,i)=>`<label style="display:flex;grid-template-columns:auto 1fr;align-items:start"><input type="checkbox" name="line" value="${i}" style="width:auto;margin-top:3px"><span>${escapeHtml(line)}</span></label>`).join('')}<input type="hidden" name="linesJson" value="${escapeHtml(JSON.stringify(lines))}"><button class="btn" type="submit">Create Selected Tasks</button></form>`);
   }
 
   async function fileToDataUrl(file, { maxWidth = 1400, quality = .82 } = {}) {
-    if (!file) return '';
+    if (!(file instanceof File)) return '';
+    if (!file.type.startsWith('image/')) throw new Error('Please choose an image file.');
     if (file.size > 12 * 1024 * 1024) throw new Error('Please choose an image under 12 MB. It will be compressed for local planner storage.');
-    const raw = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
-    if (!String(file.type).startsWith('image/')) return raw;
-    return await new Promise((resolve) => {
+
+    const safeMaxWidth = Math.max(1, finiteNumber(maxWidth, 1400));
+    const safeQuality = Math.max(.1, Math.min(.95, finiteNumber(quality, .82)));
+    const raw = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('The selected image could not be read.'));
+      reader.readAsDataURL(file);
+    });
+
+    return await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        const ratio = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.width * ratio));
-        canvas.height = Math.max(1, Math.round(img.height * ratio));
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        try {
+          if (!img.width || !img.height) throw new Error('The selected image has invalid dimensions.');
+          const ratio = Math.min(1, safeMaxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * ratio));
+          canvas.height = Math.max(1, Math.round(img.height * ratio));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('This browser could not prepare the image for storage.');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', safeQuality));
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error('The selected image could not be processed.'));
+        }
       };
-      img.onerror = () => resolve(raw);
+      img.onerror = () => reject(new Error('The selected image could not be decoded.'));
       img.src = raw;
     });
   }
@@ -1309,6 +1343,11 @@
     if (changed) scheduleAutosave();
   });
 
+  function formString(formData, name) {
+    const value = formData.get(name);
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
   document.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -1421,8 +1460,10 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = `organized-chaos-backup-${isoDateLocal()}.json`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
     toast('Backup exported.');
   }
 
