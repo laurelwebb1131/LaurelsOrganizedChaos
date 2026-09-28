@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Laurel's Organized Chaos Planner",
   "short_name": "Organized Chaos",
-  "description": "A local-first gothic scrapbook planner for daily life, school, projects, home, ideas, goals, and memories.",
+  "description": "A local-first antique grimoire planner for daily life, school, projects, home, ideas, goals, and memories.",
   "start_url": "./#cover",
   "scope": "./",
   "display": "standalone",
@@ -11,8 +11,8 @@
     "standalone"
   ],
   "orientation": "any",
-  "background_color": "#100d14",
-  "theme_color": "#100d14",
+  "background_color": "#120b08",
+  "theme_color": "#120b08",
   "categories": [
     "productivity",
     "lifestyle",
