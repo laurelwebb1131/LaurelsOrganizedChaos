@@ -230,7 +230,8 @@
   }
 
   function route() {
-    const raw = location.hash.replace(/^#/, '') || 'dashboard';
+    const raw = location.hash.replace(/^#/, '') || 'cover';
+    if (raw === 'cover') return 'cover';
     return ROUTES.some(r => r[0] === raw) ? raw : 'dashboard';
   }
 
@@ -240,6 +241,7 @@
   }
 
   function applyTheme() {
+    document.body.classList.toggle('cover-mode', route() === 'cover');
     document.body.classList.toggle('quieter', state.settings.themeIntensity === 'quiet');
     document.body.dataset.background = state.settings.backgroundPreset || 'black-paper';
     const pageAccent = state.settings.sectionThemes?.[route()] || state.settings.accentTheme || 'pink';
@@ -265,14 +267,68 @@
     const content = document.getElementById('main-content');
     const current = route();
     const renderers = {
-      dashboard: renderDashboard, today: renderToday, week: renderWeek, calendar: renderCalendar,
+      cover: renderCover, dashboard: renderDashboard, today: renderToday, week: renderWeek, calendar: renderCalendar,
       school: renderSchool, projects: renderProjects, home: renderHome, brain: renderBrain,
       goals: renderGoals, scrapbook: renderScrapbook, settings: renderSettings
     };
-    content.innerHTML = `<div class="page">${renderers[current]()}</div>${renderDecorationLayer(current)}${plannerEditToolbar(current)}`;
+    if (current === 'cover') {
+      content.innerHTML = `<div class="cover-page-shell">${renderCover()}</div>`;
+    } else {
+      content.innerHTML = `<div class="page">${renderers[current]()}</div>${renderDecorationLayer(current)}${plannerEditToolbar(current)}`;
+    }
     content.focus({ preventScroll: true });
     applyTheme();
     syncTimerTicker();
+  }
+
+  function renderCover() {
+    return `
+      <section class="antique-cover-stage" aria-label="Laurel's Organized Chaos book cover">
+        <div class="antique-book-cover">
+          <div class="cover-spine" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+
+          <div class="metal-corner corner-tl" aria-hidden="true"></div>
+          <div class="metal-corner corner-tr" aria-hidden="true"></div>
+          <div class="metal-corner corner-bl" aria-hidden="true"></div>
+          <div class="metal-corner corner-br" aria-hidden="true"></div>
+
+          <div class="embossed-frame frame-outer" aria-hidden="true"></div>
+          <div class="embossed-frame frame-inner" aria-hidden="true"></div>
+
+          <div class="cover-ornament ornament-top" aria-hidden="true">❦</div>
+          <div class="cover-title-block">
+            <span class="cover-kicker">The Private Volume of</span>
+            <h1>Laurel’s<br><span>Organized Chaos</span></h1>
+            <div class="cover-divider"><i></i><b>✦</b><i></i></div>
+            <p>Book of Daily Order &amp; Domestic Sorcery</p>
+          </div>
+
+          <div class="cover-emblem" aria-hidden="true">
+            <svg viewBox="0 0 320 320" role="presentation">
+              <circle cx="160" cy="160" r="124" class="emblem-ring"/>
+              <circle cx="160" cy="160" r="105" class="emblem-ring inner"/>
+              <path class="emblem-moon" d="M187 73c-55 15-79 72-54 119 17 32 55 49 91 35-37 37-99 35-134-7-41-50-21-127 39-151 18-7 39-7 58 4z"/>
+              <path class="emblem-crow" d="M106 210c20-26 38-41 62-44 8-22 24-38 46-38 17 0 31 7 42 20l26 5-23 13c-7 22-27 34-48 31-8 18-24 31-42 37 25 0 45 5 62 15H92c5-14 9-27 14-39z"/>
+              <path class="emblem-star" d="M95 105l5 14 14 5-14 5-5 14-5-14-14-5 14-5z"/>
+              <path class="emblem-star small" d="M241 86l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/>
+              <path class="emblem-star tiny" d="M233 219l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>
+              <path class="emblem-vine" d="M70 246c36 22 72 28 109 17 31-9 54-25 72-48M78 238c-2-15-9-25-20-32M91 246c-1-14 3-25 13-34M239 224c8-12 17-19 30-22M225 238c10-8 14-19 12-32"/>
+            </svg>
+          </div>
+
+          <div class="cover-inscription">Private Book of Laurel Webb</div>
+
+          <button class="cover-open-plaque" data-route="dashboard" type="button" aria-label="Open the Book">
+            <span>Open the Book</span>
+          </button>
+
+          <div class="cover-ribbon" aria-hidden="true"></div>
+          <div class="cover-clasp" aria-hidden="true"><span></span></div>
+        </div>
+      </section>
+    `;
   }
 
   function currentAnchor() {
@@ -1283,7 +1339,7 @@
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
   applyTheme();
-  if(!location.hash) location.hash='dashboard'; else renderApp();
+  if(!location.hash) location.hash='cover'; else renderApp();
 })();
 
 
@@ -1315,7 +1371,8 @@
   let scheduled = false;
 
   function route() {
-    const raw = (location.hash || '#dashboard').slice(1).split('?')[0];
+    const raw = (location.hash || '#cover').slice(1).split('?')[0];
+    if (raw === 'cover') return 'cover';
     return PAGE_META[raw] ? raw : 'dashboard';
   }
 
@@ -1441,6 +1498,11 @@
     scheduled = false;
     const current = route();
     document.body.dataset.step2Page = current;
+    if (current === 'cover') {
+      document.querySelector('.step2-chapter-tab')?.remove();
+      document.body.classList.remove('step2-editing');
+      return;
+    }
     const page = document.querySelector('#main-content .page');
     if (!page) return;
     ensureOrnaments(page, current);
