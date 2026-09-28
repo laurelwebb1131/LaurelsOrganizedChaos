@@ -47,6 +47,7 @@
   };
 
   let state = loadState();
+  let lastPersistedStateJson = JSON.stringify(state);
   let timerInterval = null;
 
   function uid(prefix = 'id') {
@@ -340,17 +341,25 @@
   }
 
   function saveState({ render = false } = {}) {
-    let saved = true;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const serialized = JSON.stringify(state);
+      localStorage.setItem(STORAGE_KEY, serialized);
+      lastPersistedStateJson = serialized;
     } catch (err) {
-      saved = false;
       console.error('Could not save planner data', err);
-      toast('Browser storage is full. Export a backup and remove a few large photos or backgrounds.');
+      try {
+        state = hydrateState(JSON.parse(lastPersistedStateJson));
+      } catch (restoreError) {
+        console.error('Could not restore the last saved planner state', restoreError);
+      }
+      toast('That change could not be saved. The planner restored your last saved state. Export a backup and remove a few large photos or backgrounds.');
+      applyTheme();
+      if (render) renderApp();
+      return false;
     }
     applyTheme();
     if (render) renderApp();
-    return saved;
+    return true;
   }
 
   function ensureToday() {
@@ -379,14 +388,15 @@
   }
 
   function route() {
-    const raw = location.hash.replace(/^#/, '') || 'cover';
+    const raw = location.hash.replace(/^#/, '').split('?')[0] || 'cover';
     if (raw === 'cover') return 'cover';
-    return ROUTES.some(r => r[0] === raw) ? raw : 'dashboard';
+    return ROUTES.some(([id]) => id === raw) ? raw : 'dashboard';
   }
 
   function setRoute(next) {
-    if (location.hash === `#${next}`) renderApp();
-    else location.hash = next;
+    const target = next === 'cover' || ROUTES.some(([id]) => id === next) ? next : 'dashboard';
+    if (location.hash === `#${target}`) renderApp();
+    else location.hash = target;
   }
 
   function applyTheme() {
@@ -411,10 +421,10 @@
   }
 
   function renderApp() {
-    ensureToday();
+    const current = route();
+    if (current !== 'cover') ensureToday();
     document.getElementById('main-nav').innerHTML = navHtml();
     const content = document.getElementById('main-content');
-    const current = route();
     const renderers = {
       cover: renderCover, dashboard: renderDashboard, today: renderToday, week: renderWeek, calendar: renderCalendar,
       school: renderSchool, projects: renderProjects, home: renderHome, brain: renderBrain,
@@ -1800,6 +1810,7 @@
     if (e.key !== STORAGE_KEY) return;
     try {
       state = e.newValue ? hydrateState(JSON.parse(e.newValue)) : defaultState();
+      lastPersistedStateJson = JSON.stringify(state);
       renderApp();
     } catch (error) {
       console.warn('Could not sync planner data from another tab', error);
