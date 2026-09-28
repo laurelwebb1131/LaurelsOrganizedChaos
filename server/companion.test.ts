@@ -50,3 +50,28 @@ test('companion endpoint rejects malformed nested state', async () => {
   assert.equal(response.status, 400)
   assert.match(response.body, /goals must be an array/)
 })
+
+test('companion endpoint rejects whitespace-only required fields', async () => {
+  const response = await request('/api/companion', 'POST', JSON.stringify({
+    companionName: '   ',
+    companionRole: 'Guide',
+    companionContext: 'Context',
+    realm: 'The Library',
+    userMessage: 'Help',
+  }))
+  assert.equal(response.status, 400)
+  assert.match(response.body, /companionName is required/)
+})
+
+test('companion endpoint rejects oversized request bodies', async () => {
+  const response = await request('/api/companion', 'POST', JSON.stringify({
+    companionName: 'Juniper',
+    companionRole: 'Guide',
+    companionContext: 'x'.repeat(10_000),
+    realm: 'The Library',
+    userMessage: 'Help',
+  }))
+  assert.equal(response.status, 413)
+  assert.match(response.body, /Request body too large/)
+})
+
