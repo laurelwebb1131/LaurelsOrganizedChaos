@@ -26,7 +26,7 @@
   const STATUSES = ['inbox', 'ready', 'in-progress', 'complete', 'waiting', 'postponed', 'canceled'];
   const OPEN_STATUSES = new Set(['inbox', 'ready', 'in-progress', 'waiting', 'postponed']);
 
-  const DASHBOARD_WIDGETS = ['now', 'planner', 'school', 'projects', 'void', 'progress'];
+  const DASHBOARD_WIDGETS = ['now', 'planner', 'school', 'projects', 'home', 'void', 'progress'];
   const TODAY_SECTIONS = ['overview', 'anchors', 'workbench', 'review', 'void'];
   const ACCENT_THEMES = ['pink', 'purple', 'blue', 'silver', 'autumn'];
   const BACKGROUND_PRESETS = ['black-paper', 'starfield', 'purple-nebula', 'ink-notebook', 'midnight-blue'];
@@ -350,59 +350,149 @@
     const task = recommendedTask();
     const school = state.schoolAssignments.filter(a => ['planned', 'in-progress', 'ready-to-submit'].includes(a.status)).slice(0, 3);
     const projects = state.projects.filter(p => p.status === 'active').slice(0, 3);
+    const groceryCount = Array.isArray(state.home.groceries) ? state.home.groceries.filter(item => !item.done).length : 0;
+    const homeNote = state.home.notes ? state.home.notes.trim() : '';
+    const priority = day.currentPriorities || (task ? task.title : 'Choose the one thing that matters most.');
+    const current = day.currentActivity || 'Nothing recorded yet. The page is waiting.';
+    const nextActivity = day.nextActivity || (task ? task.title : 'Choose the next small thing.');
+    const energyMark = ({ low: '☾', medium: '◐', high: '✦', variable: '↯' })[day.energy] || '◐';
 
     const widgetBodies = {
-      now: dashboardWidget('now', 'Right Now', '🕯️', `
-        <div class="now-collage">
-          <div class="taped-note hot-note"><span class="scribble-label">CURRENT</span><strong>${day.currentActivity ? escapeHtml(day.currentActivity) : 'Nothing recorded yet.'}</strong><button class="text-link" data-route="today" type="button">update today →</button></div>
-          <div class="tarot-mini"><span class="tarot-star">✦</span><small>NEXT ANCHOR</small><strong>${next.icon} ${escapeHtml(next.name)}</strong><span>${escapeHtml(next.startTime)} · ${next.durationMinutes ? `${next.durationMinutes} min` : 'open anchor'}</span></div>
-          <div class="taped-note blue-note"><span class="scribble-label">NEXT 30</span>${task ? `<strong>${escapeHtml(task.title)}</strong><small>${escapeHtml(task.nextStep || task.description || '')}</small><button class="btn blue small-btn" data-action="start-task" data-id="${task.id}" type="button">Start 30</button>` : `<strong>The void is temporarily unemployed.</strong><small>No ready 30-minute task.</small>`}</div>
-        </div>`, 'widget-wide widget-now'),
-      planner: dashboardWidget('planner', 'Open Your Planner', '✦', `
-        <div class="tarot-nav-grid">
-          ${scrapLink('🖤', 'Today', 'Current reality, anchors, timer.', 'today', 'I')}
-          ${scrapLink('🌙', 'This Week', 'Top three and deliberate carry-forward.', 'week', 'II')}
-          ${scrapLink('🗓️', 'Calendar', 'Dates with consequences.', 'calendar', 'III')}
-          ${scrapLink('📚', 'School', 'ENTR150 + ENTR210.', 'school', 'IV')}
-          ${scrapLink('🧪', 'Projects', 'Active experiments and ventures.', 'projects', 'V')}
-          ${scrapLink('📸', 'Scrapbook', 'Proof life happened off-list.', 'scrapbook', 'VI')}
-        </div>`, 'widget-wide widget-planner'),
-      school: dashboardWidget('school', 'School on the Radar', '📚', `
-        <div class="stacked-clippings">${school.length ? school.map((a, i) => `<article class="school-clipping ${a.course === 'ENTR150' ? 'clip-blue' : 'clip-purple'}" style="--tilt:${i % 2 ? '.7deg' : '-.7deg'}"><span class="tag">${a.course}</span><strong>${escapeHtml(a.title)}</strong><small>${escapeHtml(a.nextWritingStep || '')}</small></article>`).join('') : `<p class="muted">No open school work.</p>`}</div>`, 'widget-school'),
-      projects: dashboardWidget('projects', 'Project Lab', '🧪', `
-        <div class="mini-project-stack">${projects.map(p => `<button class="project-ticket" data-route="projects" type="button"><span>${escapeHtml(p.name)}</span><div class="progress"><span style="width:${Math.max(0,Math.min(100,p.progressPercent||0))}%"></span></div><small>${p.progressPercent || 0}% · ${escapeHtml(p.nextAction || 'Choose a next action.')}</small></button>`).join('')}</div>`, 'widget-projects'),
+      now: dashboardWidget('now', 'Current Focus', '☾', `
+        <div class="grimoire-focus-grid">
+          <section class="current-focus-parchment">
+            <div class="ink-heading"><span>✦</span><strong>At This Moment</strong><span>✦</span></div>
+            <div class="focus-hand-line"><span class="focus-label">current</span><strong>${escapeHtml(current)}</strong></div>
+            <div class="focus-hand-line"><span class="focus-label">next</span><strong>${escapeHtml(nextActivity)}</strong></div>
+            <div class="focus-hand-line"><span class="focus-label">priority</span><strong>${escapeHtml(priority)}</strong></div>
+            <div class="focus-marks">
+              <span title="Energy">energy ${energyMark} ${escapeHtml(day.energy || 'medium')}</span>
+              <span>next anchor ${next.icon} ${escapeHtml(next.name)} · ${escapeHtml(next.startTime)}</span>
+            </div>
+            <button class="ink-link" data-route="today" type="button">write on today's page →</button>
+          </section>
+          <section class="today-pull-card">
+            <span class="tarot-number">TODAY'S PULL</span>
+            <span class="tarot-corners">☾</span>
+            <div class="pull-sigil">✦</div>
+            ${task ? `
+              <small>${escapeHtml(task.category || 'next thing')} · ${task.durationMinutes || 30} min</small>
+              <strong>${escapeHtml(task.title)}</strong>
+              <p>${escapeHtml(task.nextStep || task.description || 'Start with the smallest visible step.')}</p>
+              <button class="ritual-button" data-action="start-task" data-id="${task.id}" type="button">Do the Damn Thing</button>
+            ` : `
+              <small>the deck is suspiciously quiet</small>
+              <strong>No ready 30-minute task.</strong>
+              <p>Pick something useful, tiny, or gloriously overdue.</p>
+              <button class="ritual-button" data-action="quick-task" type="button">Write a New Spell</button>
+            `}
+            <div class="tarot-footer">☾ · ✦ · ☾</div>
+          </section>
+        </div>`, 'widget-wide widget-focus'),
+
+      planner: dashboardWidget('planner', 'Open the Grimoire', '✦', `
+        <div class="tarot-nav-grid grimoire-nav-grid">
+          ${scrapLink('🖤', "Today's Page", 'The page currently happening.', 'today', 'I')}
+          ${scrapLink('🌙', 'Week at a Glance', 'Top three, carry-forward, reality.', 'week', 'II')}
+          ${scrapLink('☾', 'Moon Calendar', 'Dates with consequences.', 'calendar', 'III')}
+          ${scrapLink('📚', 'Study Spells', 'Courses, assignments, due dates.', 'school', 'IV')}
+          ${scrapLink('🧪', 'Works in Progress', 'Projects, experiments, ventures.', 'projects', 'V')}
+          ${scrapLink('🏠', 'Household Matters', 'Home notes, groceries, routines.', 'home', 'VI')}
+          ${scrapLink('🧠', 'Chaotic Thoughts', 'Catch it before it escapes.', 'brain', 'VII')}
+          ${scrapLink('📸', 'Memory Pages', 'Proof life happened off-list.', 'scrapbook', 'VIII')}
+        </div>`, 'widget-wide widget-grimoire-nav'),
+
+      school: dashboardWidget('school', 'Study Spells', '📚', `
+        <div class="grimoire-section-note">things currently haunting the academic desk</div>
+        <div class="stacked-clippings spell-study-stack">
+          ${school.length ? school.map((a, i) => `<article class="school-clipping ${a.course === 'ENTR150' ? 'clip-blue' : 'clip-purple'}" style="--tilt:${i % 2 ? '.7deg' : '-.7deg'}"><span class="tag">${a.course}</span><strong>${escapeHtml(a.title)}</strong><small>${escapeHtml(a.nextWritingStep || 'Open it and find the next visible step.')}</small></article>`).join('') : `<div class="empty-ink-note">No open school work. Suspicious, but acceptable.</div>`}
+        </div>
+        <button class="ink-link" data-route="school" type="button">open the study pages →</button>`, 'widget-school'),
+
+      projects: dashboardWidget('projects', 'Works in Progress', '🧪', `
+        <div class="grimoire-section-note">experiments currently bubbling on the workbench</div>
+        <div class="mini-project-stack spell-project-stack">
+          ${projects.length ? projects.map(p => `<button class="project-ticket alchemy-ticket" data-route="projects" type="button"><span>${escapeHtml(p.name)}</span><div class="progress"><span style="width:${Math.max(0,Math.min(100,p.progressPercent||0))}%"></span></div><small>${p.progressPercent || 0}% · ${escapeHtml(p.nextAction || 'Choose a next action.')}</small></button>`).join('') : '<div class="empty-ink-note">No active experiments.</div>'}
+        </div>`, 'widget-projects'),
+
+      home: dashboardWidget('home', 'Household Matters', '🏠', `
+        <div class="household-ledger">
+          <div class="ledger-flourish">❦ household ledger ❦</div>
+          <div class="ledger-row"><span>next family anchor</span><strong>${next.icon} ${escapeHtml(next.name)} · ${escapeHtml(next.startTime)}</strong></div>
+          <div class="ledger-row"><span>groceries waiting</span><strong>${groceryCount}</strong></div>
+          <div class="ledger-row ledger-note"><span>note from home</span><strong>${escapeHtml(homeNote || 'Nothing scribbled here yet.')}</strong></div>
+          <button class="ink-link" data-route="home" type="button">open household pages →</button>
+        </div>`, 'widget-home'),
+
       void: dashboardWidget('void', 'Notes from the Void', '🧠', `
-        <div class="journal-paper dark-ink"><div class="journal-doodle">↯ ✦ ☾</div><textarea id="dashboard-brain" placeholder="Throw a thought in here before it escapes..."></textarea><button class="btn" data-action="save-dashboard-brain" type="button">Trap It</button></div>`, 'widget-wide widget-void'),
-      progress: dashboardWidget('progress', 'Reality Check', '✨', `
-        <div class="reality-stats"><div><span class="stat-number">${completedToday().length}</span><span>completed today</span></div><div><span class="stat-number">${openTasks().length}</span><span>open tasks</span></div><p>No streaks. No guilt scoreboard. Just useful evidence.</p></div>`, 'widget-progress')
+        <div class="void-paper">
+          <div class="void-margin-note">put it here before your brain throws it into traffic ↘</div>
+          <div class="journal-doodle">↯ ✦ ☾</div>
+          <textarea id="dashboard-brain" aria-label="Quick brain dump" placeholder="scribble the thought before it escapes..."></textarea>
+          <button class="ritual-button small-ritual" data-action="save-dashboard-brain" type="button">Trap It in the Book</button>
+        </div>`, 'widget-wide widget-void'),
+
+      progress: dashboardWidget('progress', 'Small Victories', '✨', `
+        <div class="victory-scrap">
+          <div class="victory-count"><strong>${completedToday().length}</strong><span>things crossed off today</span></div>
+          <div class="victory-note">
+            <span>today's proof of life</span>
+            <strong>${escapeHtml(day.smallWin || 'Write down one thing that counted.')}</strong>
+          </div>
+          <div class="victory-footnote">${openTasks().length} open tasks still exist. They have survived worse.</div>
+          <button class="ink-link" data-route="today" type="button">add a small win →</button>
+        </div>`, 'widget-progress')
     };
 
     return `
-      <section class="scrapbook-hero">
-        <div class="hero-paper hero-paper-main">
-          <span class="handwritten-kicker">Laurel's</span>
-          <h1>ORGANIZED<br>CHAOS</h1>
-          <p>Part planner. Part scrapbook. Part external brain containment unit.</p>
-          <div class="hero-actions"><button class="btn" data-route="today" type="button">Open Today</button><button class="btn secondary" data-action="quick-task" type="button">＋ Quick Task</button></div>
+      <div class="dashboard-grimoire">
+        <section class="grimoire-title-spread">
+          <div class="book-page book-page-left">
+            <span class="grimoire-eyebrow">Laurel's personal book of</span>
+            <h1><span>Organized</span><span>Chaos</span></h1>
+            <div class="ink-divider"><span>☾</span><i></i><span>✦</span><i></i><span>☾</span></div>
+            <p class="grimoire-subtitle">A Grimoire for Daily Survival, Family Chaos, Schoolwork, and Mild Domestic Sorcery.</p>
+            <div class="title-spread-actions">
+              <button class="ritual-button" data-route="today" type="button">Open Today's Page</button>
+              <button class="ink-link title-quick-link" data-action="quick-task" type="button">＋ scribble a quick task</button>
+            </div>
+            <div class="margin-scribble scribble-left">magic = timers + actually writing it down</div>
+            <div class="page-star star-a">✦</div>
+            <div class="page-star star-b">⋆</div>
+          </div>
+
+          <div class="book-page book-page-right">
+            <div class="title-moon-sketch">${witchArtwork('moon')}</div>
+            <div class="title-date-note">
+              <span>today's page</span>
+              <strong>${formatDate(new Date(), { weekday:'long', month:'long', day:'numeric' })}</strong>
+              <small>organized enough to function.<br>chaotic enough to still be mine.</small>
+            </div>
+            <div class="title-familiar title-crow">${witchArtwork('crow')}</div>
+            <div class="title-familiar title-owl">${witchArtwork('owl')}</div>
+            <div class="wax-seal" aria-hidden="true"><span>☾</span></div>
+            <div class="margin-scribble scribble-right">don't forget dinner, witch.</div>
+            <div class="pink-ink-arrow">↙</div>
+          </div>
+        </section>
+
+        <div class="dashboard-toolbar grimoire-toolbar">
+          <div>
+            <strong>Arrange the pages</strong>
+            <span class="muted small">${state.ui.dashboardEditMode ? 'Drag the scraps or use ↑ ↓. The book remembers.' : 'Everything below can still be rearranged.'}</span>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn ghost small-btn handwritten-control" data-action="toggle-dashboard-edit" type="button">${state.ui.dashboardEditMode ? '✓ Close the binding table' : '✣ Rearrange the scraps'}</button>
+            ${state.ui.dashboardEditMode ? `<button class="btn ghost small-btn handwritten-control" data-action="reset-dashboard-layout" type="button">Put it back</button>` : ''}
+          </div>
         </div>
-        <div class="hero-polaroid"><div class="polaroid-sky">${state.settings.heroPhotoDataUrl ? `<img src="${state.settings.heroPhotoDataUrl}" alt="Personal planner hero">` : witchArtwork('moon')}</div><strong>${formatDate(new Date(), { weekday:'long', month:'long', day:'numeric' })}</strong><span>organized enough to function</span></div>
-        <div class="hero-crow">${witchArtwork('crow')}</div>
-        <div class="hero-owl">${witchArtwork('owl')}</div>
-        <div class="hot-doodle doodle-one">✦</div><div class="hot-doodle doodle-two">♡</div><div class="hot-doodle doodle-three">↯</div>
-        <div class="hero-note-strip">A plan is a guide, not a blood oath.</div>
-      </section>
 
-      <div class="dashboard-toolbar">
-        <div><strong>My planner spread</strong><span class="muted small">${state.ui.dashboardEditMode ? 'Drag cards or use ↑ ↓. Layout saves automatically.' : 'Your saved arrangement.'}</span></div>
-        <div class="toolbar-actions"><button class="btn ghost small-btn" data-action="toggle-dashboard-edit" type="button">${state.ui.dashboardEditMode ? '✓ Done arranging' : '✣ Rearrange'}</button>${state.ui.dashboardEditMode ? `<button class="btn ghost small-btn" data-action="reset-dashboard-layout" type="button">Reset layout</button>` : ''}</div>
+        <section class="dashboard-board grimoire-board ${state.ui.dashboardEditMode ? 'editing' : ''}" id="dashboard-board">
+          ${state.ui.dashboardOrder.map(id => widgetBodies[id] || '').join('')}
+        </section>
       </div>
-
-      <section class="dashboard-board ${state.ui.dashboardEditMode ? 'editing' : ''}" id="dashboard-board">
-        ${state.ui.dashboardOrder.map(id => widgetBodies[id] || '').join('')}
-      </section>
     `;
   }
-
   function scrapLink(icon, title, text, target, number = '✦') {
     return `<button class="tarot-link" data-route="${target}" type="button"><span class="tarot-number">${number}</span><span class="tarot-corners">✦</span><span class="big-icon">${icon}</span><strong>${escapeHtml(title)}</strong><span>${escapeHtml(text)}</span><span class="tarot-footer">☾ · ✦ · ☾</span></button>`;
   }
