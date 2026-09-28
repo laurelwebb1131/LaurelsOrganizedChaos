@@ -1,4 +1,4 @@
-const CACHE = 'loc-planner-step2-v4';
+const CACHE = 'loc-planner-step2-v4b';
 const ASSETS = [
   './',
   './index.html',
@@ -9,7 +9,9 @@ const ASSETS = [
   './payload/app-1.txt',
   './payload/app-2.txt',
   './payload/app-3.txt',
-  './payload/step2-style-0.txt',
+  './payload/step2-style-a.txt',
+  './payload/step2-style-b.txt',
+  './payload/step2-style-c.txt',
   './payload/step2-app-0.txt'
 ];
 
