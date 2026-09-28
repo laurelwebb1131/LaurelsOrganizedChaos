@@ -2,11 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#100d14" />
-  <meta name="description" content="Laurel's Organized Chaos Planner" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Laurel's Organized Chaos, a local-first gothic scrapbook life planner." />
+  <meta name="application-name" content="Organized Chaos" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Organized Chaos" />
   <title>Laurel's Organized Chaos Planner</title>
-  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="./app.js" defer></script>
 </head>
 <body>
   <div id="app-shell">
@@ -21,18 +29,22 @@
         <small>Local-first • Free • Yours</small>
       </div>
     </aside>
+
     <header class="mobile-header">
       <button class="icon-btn" id="mobile-menu" aria-label="Open menu" type="button">☰</button>
       <div class="mobile-title">Laurel's Organized Chaos</div>
       <button class="icon-btn" id="quick-add-mobile" aria-label="Quick add task" type="button">＋</button>
     </header>
+
     <main id="main-content" tabindex="-1">
       <div style="padding:32px;font-family:system-ui;background:#100d14;color:white;min-height:100vh">
         Loading the chaos…
       </div>
     </main>
   </div>
+
   <button class="floating-add" id="floating-add" type="button" aria-label="Quick add task">＋</button>
+
   <div class="modal-backdrop hidden" id="modal-backdrop" aria-hidden="true">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-header">
@@ -42,60 +54,14 @@
       <div id="modal-body"></div>
     </section>
   </div>
+
   <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-  <script>
-    async function readText(paths) {
-      const parts = await Promise.all(paths.map(async (path) => {
-        const response = await fetch(path, { cache: 'no-store' });
-        if (!response.ok) throw new Error('Could not load ' + path);
-        return (await response.text()).trim();
-      }));
-      return parts.join('');
-    }
-
-    async function gunzipBase64(paths) {
-      if (!('DecompressionStream' in window)) {
-        throw new Error('This browser does not support DecompressionStream. Please use a current Chrome, Edge, or Firefox.');
-      }
-      const b64 = await readText(paths);
-      const binary = atob(b64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-      return await new Response(stream).text();
-    }
-
-    (async () => {
-      try {
-        const [css, js, step2Css, step2Js] = await Promise.all([
-          gunzipBase64(['./payload/style-0.txt', './payload/style-1.txt']),
-          gunzipBase64(['./payload/app-0.txt', './payload/app-1.txt', './payload/app-2.txt', './payload/app-3.txt']),
-          gunzipBase64(['./payload/step2-style-a.txt', './payload/step2-style-b.txt', './payload/step2-style-c.txt']),
-          gunzipBase64(['./payload/step2-app-0.txt'])
-        ]);
-
-        const baseStyle = document.createElement('style');
-        baseStyle.textContent = css;
-        baseStyle.dataset.layer = 'planner-base';
-        document.head.appendChild(baseStyle);
-
-        new Function(js)();
-
-        const polishStyle = document.createElement('style');
-        polishStyle.textContent = step2Css;
-        polishStyle.dataset.layer = 'planner-step2';
-        document.head.appendChild(polishStyle);
-
-        new Function(step2Js)();
-      } catch (error) {
-        console.error(error);
-        document.getElementById('main-content').innerHTML =
-          '<div style="padding:32px;font-family:system-ui;background:#100d14;color:#fff;min-height:100vh">' +
-          '<h1>The planner tripped over its own cape.</h1><p>' + String(error.message || error) +
-          '</p><p>Refresh the page in a current Chrome or Edge browser.</p></div>';
-      }
-    })();
-  </script>
+  <noscript>
+    <div style="padding:32px;font-family:system-ui;background:#100d14;color:white;min-height:100vh">
+      <h1>JavaScript is required for the planner.</h1>
+      <p>Your planner data stays in your browser, but the interactive planner needs JavaScript enabled.</p>
+    </div>
+  </noscript>
 </body>
 </html>
