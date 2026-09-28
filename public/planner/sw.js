@@ -1,4 +1,4 @@
-const CACHE = 'loc-planner-step1-v3';
+const CACHE = 'loc-planner-step2-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,9 @@ const ASSETS = [
   './payload/app-0.txt',
   './payload/app-1.txt',
   './payload/app-2.txt',
-  './payload/app-3.txt'
+  './payload/app-3.txt',
+  './payload/step2-style-0.txt',
+  './payload/step2-app-0.txt'
 ];
 
 self.addEventListener('install', event => {
