@@ -1218,6 +1218,7 @@
   let installPromptEvent = null;
 
   document.addEventListener('click', async (e) => {
+    if (!(e.target instanceof Element)) return;
     const routeBtn = e.target.closest('[data-route]');
     if (routeBtn) { setRoute(routeBtn.dataset.route); closeSidebar(); return; }
     const el = e.target.closest('[data-action]');
@@ -1285,6 +1286,7 @@
   });
 
   document.addEventListener('change', async (e) => {
+    if (!(e.target instanceof HTMLElement)) return;
     const el=e.target;
     if (el.dataset.setting) { state.settings[el.dataset.setting]=el.value; saveState({render:true}); return; }
     if (el.dataset.sectionTheme) { if(el.value) state.settings.sectionThemes[el.dataset.sectionTheme]=el.value; else delete state.settings.sectionThemes[el.dataset.sectionTheme]; saveState({render:true}); return; }
@@ -1672,23 +1674,27 @@
 
   let draggedDashboardWidget = null;
   document.addEventListener('dragstart', (e) => {
-    const widget = e.target.closest?.('[data-dashboard-widget]');
+    if (!(e.target instanceof Element)) return;
+    const widget = e.target.closest('[data-dashboard-widget]');
     if (!widget || !state.ui.dashboardEditMode) return;
     draggedDashboardWidget = widget.dataset.dashboardWidget;
     widget.classList.add('dragging');
     if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', draggedDashboardWidget); }
   });
   document.addEventListener('dragover', (e) => {
-    const widget = e.target.closest?.('[data-dashboard-widget]');
+    if (!(e.target instanceof Element)) return;
+    const widget = e.target.closest('[data-dashboard-widget]');
     if (!widget || !state.ui.dashboardEditMode || !draggedDashboardWidget) return;
     e.preventDefault();
     widget.classList.add('drag-over');
   });
   document.addEventListener('dragleave', (e) => {
-    e.target.closest?.('[data-dashboard-widget]')?.classList.remove('drag-over');
+    if (!(e.target instanceof Element)) return;
+    e.target.closest('[data-dashboard-widget]')?.classList.remove('drag-over');
   });
   document.addEventListener('drop', (e) => {
-    const widget = e.target.closest?.('[data-dashboard-widget]');
+    if (!(e.target instanceof Element)) return;
+    const widget = e.target.closest('[data-dashboard-widget]');
     if (!widget || !state.ui.dashboardEditMode) return;
     e.preventDefault();
     document.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over'));
@@ -1702,34 +1708,38 @@
 
   let draggedPageSection = null;
   document.addEventListener('dragstart', (e) => {
-    const section=e.target.closest?.('[data-page-section]');
+    if (!(e.target instanceof Element)) return;
+    const section=e.target.closest('[data-page-section]');
     if(!section||!state.ui.plannerEditMode)return;
     draggedPageSection={page:section.dataset.page,id:section.dataset.pageSection};
     section.classList.add('dragging');
     e.dataTransfer?.setData('text/plain', draggedPageSection.id);
   });
   document.addEventListener('dragover', (e) => {
-    const section=e.target.closest?.('[data-page-section]');
+    if (!(e.target instanceof Element)) return;
+    const section=e.target.closest('[data-page-section]');
     if(!section||!state.ui.plannerEditMode||!draggedPageSection)return;
     e.preventDefault(); section.classList.add('drag-over');
   });
   document.addEventListener('drop', (e) => {
-    const section=e.target.closest?.('[data-page-section]');
+    if (!(e.target instanceof Element)) return;
+    const section=e.target.closest('[data-page-section]');
     if(!section||!draggedPageSection)return;
     e.preventDefault(); reorderPageSection(section.dataset.page,draggedPageSection.id,section.dataset.pageSection); draggedPageSection=null;
   });
 
   let pointerDrag = null;
   document.addEventListener('pointerdown', (e) => {
+    if (!(e.target instanceof Element)) return;
     if (state.ui.plannerEditMode) {
-      const sticker=e.target.closest?.('[data-decoration-id]');
+      const sticker=e.target.closest('[data-decoration-id]');
       if(sticker && !e.target.closest('[data-action]')) {
         const item=state.decorations.find(d=>d.id===sticker.dataset.decorationId); if(!item)return;
         pointerDrag={kind:'sticker',id:item.id,startX:e.clientX,startY:e.clientY,origX:item.x,origY:item.y,el:sticker}; sticker.setPointerCapture?.(e.pointerId); e.preventDefault(); return;
       }
     }
     if(state.ui.scrapbookBoardMode && route()==='scrapbook') {
-      const pol=e.target.closest?.('[data-memory-id]');
+      const pol=e.target.closest('[data-memory-id]');
       if(pol) { const id=pol.dataset.memoryId,pos=state.ui.scrapbookPositions[id]||{}; pointerDrag={kind:'memory',id,startX:e.clientX,startY:e.clientY,origX:pos.x ?? (parseFloat(pol.style.left)||0),origY:pos.y ?? (parseFloat(pol.style.top)||0),el:pol}; pol.setPointerCapture?.(e.pointerId); e.preventDefault(); }
     }
   });
@@ -1744,17 +1754,52 @@
     saveState(); pointerDrag=null;
   });
 
-  window.addEventListener('beforeinstallprompt', (e)=>{e.preventDefault();installPromptEvent=e;});
-  document.getElementById('mobile-menu').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
-  document.getElementById('quick-add-mobile').addEventListener('click',()=>quickTaskModal());
-  document.getElementById('floating-add').addEventListener('click',()=>quickTaskModal());
-  document.getElementById('modal-close').addEventListener('click',closeModal);
-  document.getElementById('modal-backdrop').addEventListener('click',e=>{if(e.target.id==='modal-backdrop')closeModal();});
-  document.getElementById('theme-toggle').addEventListener('click',()=>{state.settings.themeIntensity=state.settings.themeIntensity==='full'?'quiet':'full';saveState({render:true});});
-  window.addEventListener('hashchange',renderApp);
-  window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPromptEvent = e;
+  });
+  document.getElementById('mobile-menu')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('open'));
+  document.getElementById('quick-add-mobile')?.addEventListener('click', () => quickTaskModal());
+  document.getElementById('floating-add')?.addEventListener('click', () => quickTaskModal());
+  document.getElementById('modal-close')?.addEventListener('click', closeModal);
+  document.getElementById('modal-backdrop')?.addEventListener('click', (e) => {
+    if (e.target instanceof HTMLElement && e.target.id === 'modal-backdrop') closeModal();
+  });
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    state.settings.themeIntensity = state.settings.themeIntensity === 'full' ? 'quiet' : 'full';
+    saveState({render:true});
+  });
 
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  window.addEventListener('hashchange', () => {
+    flushAutosave();
+    renderApp();
+  });
+  window.addEventListener('keydown', (e) => {
+    const target = e.target instanceof Element ? e.target.closest('[data-action="calendar-day"]') : null;
+    if (target && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      return;
+    }
+    if (e.key === 'Escape') closeModal();
+  });
+  window.addEventListener('beforeunload', flushAutosave);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushAutosave();
+  });
+  window.addEventListener('storage', (e) => {
+    if (e.key !== STORAGE_KEY) return;
+    try {
+      state = e.newValue ? hydrateState(JSON.parse(e.newValue)) : defaultState();
+      renderApp();
+    } catch (error) {
+      console.warn('Could not sync planner data from another tab', error);
+    }
+  });
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('./sw.js').catch((error) => console.warn('Planner service worker registration failed', error));
+  }
   applyTheme();
   if(!location.hash) location.hash='cover'; else renderApp();
 })();
