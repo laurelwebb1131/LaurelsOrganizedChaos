@@ -1,4 +1,4 @@
-const CACHE = 'loc-planner-v2';
+const CACHE = 'loc-planner-step1-v3';
 const ASSETS = [
   './',
   './index.html',
