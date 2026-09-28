@@ -2491,3 +2491,528 @@ body.quieter .victory-note {
   .dashboard-grimoire .tarot-link { min-height: 165px; }
   .ledger-row { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* =========================================================
+   BUILD 1 — 1800s GRIMOIRE COVER
+   The planner begins as a closed antique volume.
+   ========================================================= */
+body.cover-mode {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(91,64,43,.18), transparent 38%),
+    radial-gradient(circle at 18% 18%, rgba(128,91,55,.08), transparent 22%),
+    linear-gradient(145deg, #070504, #100b08 52%, #050403);
+  color: #d6c49a;
+}
+body.cover-mode::before {
+  opacity: .08;
+  background-image:
+    repeating-linear-gradient(19deg, rgba(210,184,131,.08) 0 1px, transparent 1px 8px),
+    radial-gradient(circle at 26% 23%, rgba(255,240,197,.16) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 71% 66%, rgba(255,240,197,.12) 0 1px, transparent 1.5px);
+  background-size: auto, 170px 160px, 210px 190px;
+}
+body.cover-mode .sidebar,
+body.cover-mode .mobile-header,
+body.cover-mode .floating-add,
+body.cover-mode .planner-edit-toolbar,
+body.cover-mode .decoration-layer,
+body.cover-mode .step2-chapter-tab {
+  display: none !important;
+}
+body.cover-mode #app-shell {
+  min-height: 100dvh;
+}
+body.cover-mode #main-content {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.cover-page-shell {
+  min-height: 100dvh;
+}
+.antique-cover-stage {
+  min-height: 100dvh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 54px);
+  perspective: 1800px;
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(154,116,75,.12), transparent 31%),
+    linear-gradient(180deg, rgba(255,255,255,.015), rgba(0,0,0,.22));
+}
+.antique-book-cover {
+  position: relative;
+  width: min(780px, 88vw);
+  aspect-ratio: 0.73;
+  max-height: 90dvh;
+  overflow: visible;
+  isolation: isolate;
+  border-radius: 16px 11px 12px 18px;
+  color: #b99a62;
+  transform: rotateY(-3deg) rotateX(.7deg);
+  transform-origin: left center;
+  background:
+    radial-gradient(circle at 17% 18%, rgba(184,130,74,.05) 0 2px, transparent 3px),
+    radial-gradient(circle at 83% 73%, rgba(207,160,94,.035) 0 2px, transparent 3px),
+    repeating-linear-gradient(113deg, rgba(239,204,139,.018) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(21deg, rgba(0,0,0,.085) 0 2px, transparent 2px 11px),
+    radial-gradient(ellipse at 42% 39%, #432c20 0, #291812 39%, #1a0f0c 73%, #110907 100%);
+  border: 2px solid #090504;
+  box-shadow:
+    -24px 20px 0 #090604,
+    -28px 24px 1px #271813,
+    -33px 29px 0 #080504,
+    0 42px 85px rgba(0,0,0,.72),
+    inset 0 0 0 4px rgba(116,80,44,.18),
+    inset 0 0 90px rgba(0,0,0,.62);
+}
+.antique-book-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .8;
+  background:
+    linear-gradient(90deg, rgba(255,221,157,.04), transparent 10%, transparent 91%, rgba(0,0,0,.32)),
+    radial-gradient(ellipse at 2% 12%, rgba(211,167,98,.12), transparent 19%),
+    radial-gradient(ellipse at 97% 88%, rgba(0,0,0,.42), transparent 24%),
+    repeating-radial-gradient(ellipse at 50% 50%, rgba(255,229,178,.016) 0 1px, transparent 1px 8px);
+  mix-blend-mode: screen;
+}
+.antique-book-cover::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid rgba(179,136,75,.24);
+  border-radius: 10px 6px 8px 12px;
+  box-shadow:
+    inset 0 0 0 2px rgba(28,15,11,.75),
+    inset 0 0 0 5px rgba(167,121,63,.05);
+}
+
+/* thick raised spine and period bands */
+.cover-spine {
+  position: absolute;
+  z-index: 12;
+  top: 1.5%;
+  bottom: 1.5%;
+  left: -4.8%;
+  width: 10%;
+  border-radius: 16px 4px 4px 18px;
+  background:
+    linear-gradient(90deg,#0a0504 0,#21120e 27%,#452a1e 55%,#1b0e0b 82%,#080403 100%);
+  border: 1px solid #080403;
+  box-shadow:
+    inset -8px 0 16px rgba(0,0,0,.48),
+    inset 5px 0 7px rgba(181,125,69,.08),
+    -10px 9px 18px rgba(0,0,0,.52);
+}
+.cover-spine span {
+  position: absolute;
+  left: -6%;
+  width: 112%;
+  height: 3.2%;
+  border-radius: 50%;
+  background: linear-gradient(180deg,#684827,#26140d 44%,#0d0705 100%);
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.7),
+    inset 0 1px rgba(198,150,82,.18);
+}
+.cover-spine span:nth-child(1){ top: 9%; }
+.cover-spine span:nth-child(2){ top: 28%; }
+.cover-spine span:nth-child(3){ top: 48.5%; }
+.cover-spine span:nth-child(4){ top: 69%; }
+.cover-spine span:nth-child(5){ top: 88%; }
+
+/* embossed Victorian frames */
+.embossed-frame {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  border-style: double;
+  border-color: rgba(167,126,70,.58);
+  filter: drop-shadow(1px 1px 0 rgba(0,0,0,.7));
+}
+.frame-outer {
+  inset: 5.3% 6.2% 5.1% 8.4%;
+  border-width: 5px;
+  border-radius: 48% 5% 45% 4% / 4% 44% 5% 40%;
+  box-shadow:
+    0 0 0 2px rgba(47,28,18,.65),
+    0 0 0 5px rgba(149,104,54,.16);
+}
+.frame-inner {
+  inset: 8.6% 9.5% 8.4% 11.7%;
+  border-width: 3px;
+  border-radius: 8px 31px 9px 29px;
+  border-color: rgba(136,97,54,.48);
+}
+.frame-inner::before,
+.frame-inner::after {
+  content: "❦";
+  position: absolute;
+  left: 50%;
+  color: rgba(176,132,73,.73);
+  font-family: Georgia, serif;
+  font-size: clamp(1.2rem, 2.5vw, 2.3rem);
+  text-shadow: 1px 1px #0b0604;
+}
+.frame-inner::before { top: -1.1em; transform: translateX(-50%); }
+.frame-inner::after { bottom: -1.1em; transform: translateX(-50%) rotate(180deg); }
+
+/* tarnished brass corners */
+.metal-corner {
+  position: absolute;
+  z-index: 18;
+  width: 11%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: .93;
+  background:
+    radial-gradient(circle at 34% 31%, rgba(241,211,140,.38) 0 3%, transparent 4%),
+    linear-gradient(135deg,#312515 0,#8b6a36 28%,#4d3b22 52%,#a68145 69%,#2a2013 100%);
+  clip-path: polygon(0 0,100% 0,100% 22%,44% 22%,22% 44%,22% 100%,0 100%);
+  box-shadow: inset 0 0 0 2px rgba(235,200,129,.13);
+}
+.metal-corner::after {
+  content: "✦";
+  position: absolute;
+  top: 8%;
+  left: 12%;
+  color: #191208;
+  font-size: clamp(.65rem,1.5vw,1rem);
+  text-shadow: 0 1px rgba(210,170,96,.18);
+}
+.corner-tl { top: 1.7%; left: 1.8%; }
+.corner-tr { top: 1.7%; right: 1.8%; transform: rotate(90deg); }
+.corner-br { bottom: 1.7%; right: 1.8%; transform: rotate(180deg); }
+.corner-bl { bottom: 1.7%; left: 1.8%; transform: rotate(270deg); }
+
+.cover-ornament {
+  position: absolute;
+  z-index: 9;
+  left: 50%;
+  color: rgba(180,137,77,.72);
+  font-family: Georgia,serif;
+  text-shadow: 1px 2px #0a0504;
+}
+.ornament-top {
+  top: 11.5%;
+  transform: translateX(-50%);
+  font-size: clamp(1.4rem,3vw,2.4rem);
+}
+
+/* title impressed into leather */
+.cover-title-block {
+  position: absolute;
+  z-index: 10;
+  top: 15.5%;
+  left: 15%;
+  right: 12%;
+  text-align: center;
+}
+.cover-kicker {
+  display: block;
+  margin-bottom: 10px;
+  color: #806d49;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(.57rem,1.15vw,.84rem);
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  text-shadow: 0 -1px #070403, 0 1px rgba(207,168,96,.08);
+}
+.cover-title-block h1 {
+  margin: 0;
+  color: #b6955c;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.5rem,6.7vw,5.8rem);
+  font-weight: 700;
+  line-height: .91;
+  letter-spacing: .015em;
+  text-transform: none;
+  text-shadow:
+    -1px -1px 0 rgba(15,8,5,.95),
+    1px 1px 0 rgba(213,169,93,.16),
+    2px 3px 3px rgba(0,0,0,.84);
+  filter: sepia(.26);
+}
+.cover-title-block h1 span {
+  display: block;
+  margin-top: .12em;
+  font-size: .74em;
+  letter-spacing: .075em;
+  font-variant: small-caps;
+}
+.cover-divider {
+  margin: clamp(14px,2.5vw,24px) auto 12px;
+  width: min(320px,72%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a17f49;
+}
+.cover-divider i {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg,transparent,#8c6b3c,transparent);
+  box-shadow: 0 1px #080403;
+}
+.cover-divider b {
+  font-size: .75rem;
+  font-weight: 400;
+}
+.cover-title-block p {
+  margin: 0 auto;
+  max-width: 490px;
+  color: #8e754c;
+  font-family: Georgia,"Times New Roman",serif;
+  font-size: clamp(.78rem,1.65vw,1.18rem);
+  font-style: italic;
+  letter-spacing: .055em;
+  line-height: 1.5;
+  text-shadow: 0 -1px #0a0504, 1px 1px rgba(205,164,92,.08);
+}
+
+/* engraved central seal */
+.cover-emblem {
+  position: absolute;
+  z-index: 9;
+  left: 50%;
+  top: 43%;
+  width: min(42%,310px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  color: #9a7946;
+  filter:
+    drop-shadow(-1px -1px 0 #070403)
+    drop-shadow(1px 1px 0 rgba(208,164,90,.12));
+}
+.cover-emblem svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cover-emblem .emblem-ring,
+.cover-emblem .emblem-vine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+}
+.cover-emblem .emblem-ring.inner {
+  stroke-width: 1.7;
+  stroke-dasharray: 3 7;
+  opacity: .72;
+}
+.cover-emblem .emblem-moon,
+.cover-emblem .emblem-star {
+  fill: currentColor;
+  opacity: .91;
+}
+.cover-emblem .emblem-crow {
+  fill: #967342;
+  opacity: .88;
+}
+.cover-emblem .emblem-star.small { opacity: .7; }
+.cover-emblem .emblem-star.tiny { opacity: .57; }
+.cover-emblem::before,
+.cover-emblem::after {
+  position: absolute;
+  top: 47%;
+  color: rgba(141,104,58,.65);
+  font-family: Georgia,serif;
+  font-size: 1.1rem;
+}
+.cover-emblem::before { content: "☾"; left: -13%; }
+.cover-emblem::after { content: "☽"; right: -13%; }
+
+/* inscription and one single entry action */
+.cover-inscription {
+  position: absolute;
+  z-index: 10;
+  left: 19%;
+  right: 16%;
+  bottom: 17.5%;
+  text-align: center;
+  color: #806c48;
+  font-family: Georgia,"Times New Roman",serif;
+  font-size: clamp(.68rem,1.35vw,.96rem);
+  font-style: italic;
+  letter-spacing: .08em;
+  text-shadow: 0 -1px #090503;
+}
+.cover-open-plaque {
+  position: absolute;
+  z-index: 24;
+  left: 50%;
+  bottom: 8.2%;
+  min-width: min(280px,52%);
+  transform: translateX(-50%);
+  padding: 12px 24px 13px;
+  cursor: pointer;
+  border: 1px solid #171006;
+  border-radius: 2px;
+  color: #24190d;
+  font-family: Georgia,"Times New Roman",serif;
+  font-size: clamp(.78rem,1.55vw,1.05rem);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  background:
+    linear-gradient(180deg,rgba(247,218,148,.28),transparent 33%),
+    linear-gradient(90deg,#4b381d,#9a7841 13%,#6c522c 46%,#a17d43 73%,#49351c);
+  box-shadow:
+    inset 0 0 0 2px rgba(224,188,112,.18),
+    inset 0 0 0 5px rgba(36,26,13,.14),
+    0 3px 0 #100b06,
+    0 8px 14px rgba(0,0,0,.35);
+  text-shadow: 0 1px rgba(205,172,103,.28);
+  transition: transform .18s ease, filter .18s ease;
+}
+.cover-open-plaque span {
+  position: relative;
+}
+.cover-open-plaque span::before,
+.cover-open-plaque span::after {
+  content: "✦";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .55em;
+  opacity: .72;
+}
+.cover-open-plaque span::before { left: -2.1em; }
+.cover-open-plaque span::after { right: -2.1em; }
+.cover-open-plaque:hover {
+  transform: translateX(-50%) translateY(-3px);
+  filter: brightness(1.12);
+}
+.cover-open-plaque:active {
+  transform: translateX(-50%) translateY(1px);
+}
+.cover-open-plaque:focus-visible {
+  outline: 2px solid #d8b873;
+  outline-offset: 5px;
+}
+
+/* ribbon and clasp make the object feel physical */
+.cover-ribbon {
+  position: absolute;
+  z-index: -1;
+  left: 23%;
+  bottom: -6.5%;
+  width: 5.5%;
+  height: 14%;
+  background: linear-gradient(90deg,#3b0e19,#6f1f31 50%,#2c0912);
+  clip-path: polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);
+  box-shadow: 3px 6px 9px rgba(0,0,0,.45);
+}
+.cover-clasp {
+  position: absolute;
+  z-index: 20;
+  right: -6.2%;
+  top: 48%;
+  width: 10%;
+  height: 13%;
+  border: 1px solid #1b1309;
+  border-radius: 3px 11px 11px 3px;
+  background:
+    linear-gradient(90deg,#322313,#74562d 28%,#94713b 52%,#4e391f 78%,#261a0f);
+  box-shadow:
+    inset 0 0 0 2px rgba(214,173,97,.1),
+    5px 8px 12px rgba(0,0,0,.4);
+}
+.cover-clasp span {
+  position: absolute;
+  left: 28%;
+  top: 34%;
+  width: 36%;
+  height: 31%;
+  border-radius: 50% 50% 42% 42%;
+  border: 2px solid #25190c;
+  box-shadow: inset 0 0 0 2px rgba(203,160,83,.1);
+}
+.cover-clasp span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 3px;
+  height: 8px;
+  transform: translate(-50%,-20%);
+  background: #21170d;
+  border-radius: 3px;
+}
+
+/* age wear, scratches and hand-rubbed edges */
+.antique-book-cover .cover-title-block::after {
+  content: "";
+  position: absolute;
+  inset: -20% -5% -15%;
+  z-index: -1;
+  opacity: .22;
+  background:
+    linear-gradient(104deg, transparent 0 19%, rgba(238,196,119,.07) 20%, transparent 21% 54%, rgba(0,0,0,.16) 55%, transparent 56%),
+    repeating-linear-gradient(7deg, transparent 0 28px, rgba(222,181,105,.04) 29px, transparent 30px 58px);
+}
+.antique-cover-stage::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: .13;
+  background:
+    radial-gradient(circle at 50% 48%, transparent 0 42%, rgba(0,0,0,.63) 86%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px);
+}
+
+/* responsive book remains a book rather than a web card */
+@media (max-width: 760px) {
+  body.cover-mode { overflow: auto; }
+  .antique-cover-stage {
+    min-height: 100svh;
+    padding: 18px 28px 28px 39px;
+  }
+  .antique-book-cover {
+    width: min(86vw,560px);
+    max-height: none;
+    transform: none;
+  }
+  .cover-spine { left: -5.5%; }
+  .cover-title-block { top: 14.8%; left: 14%; right: 10%; }
+  .cover-title-block h1 { font-size: clamp(2rem,10vw,4.1rem); }
+  .cover-title-block h1 span { font-size: .71em; }
+  .cover-emblem { top: 42%; width: 43%; }
+  .cover-inscription { bottom: 17%; }
+  .cover-open-plaque { bottom: 7.5%; min-width: 56%; }
+}
+@media (max-width: 460px) {
+  .antique-cover-stage { padding: 14px 23px 24px 31px; }
+  .antique-book-cover { width: 88vw; }
+  .cover-title-block h1 { font-size: 2rem; }
+  .cover-title-block p { font-size: .68rem; }
+  .cover-kicker { font-size: .47rem; }
+  .cover-emblem { width: 45%; }
+  .cover-inscription { font-size: .54rem; }
+  .cover-open-plaque {
+    min-width: 62%;
+    padding: 9px 14px 10px;
+    font-size: .62rem;
+  }
+  .metal-corner { width: 13%; }
+  .frame-outer { inset: 4.8% 5.5% 4.8% 8%; }
+  .frame-inner { inset: 8.3% 8.8% 8.1% 11%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cover-open-plaque { transition: none; }
+  .antique-book-cover { transform: none; }
+}
