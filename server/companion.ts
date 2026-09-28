@@ -81,13 +81,13 @@ export async function handleCompanion(request: IncomingMessage, response: Server
     if (now - bucket.startedAt >= requestWindowMs) requestCounts.delete(key)
   }
   const existing = requestCounts.get(clientKey)
-  const window = existing && now - existing.startedAt < requestWindowMs
+  const bucket = existing && now - existing.startedAt < requestWindowMs
     ? existing
     : { startedAt: now, count: 0 }
-  window.count += 1
-  requestCounts.set(clientKey, window)
+  bucket.count += 1
+  requestCounts.set(clientKey, bucket)
 
-  if (window.count > requestLimit) {
+  if (bucket.count > requestLimit) {
     response.setHeader('Retry-After', String(Math.ceil(requestWindowMs / 1000)))
     writeJson(response, 429, { error: 'Too many requests', requestId })
     return
@@ -113,8 +113,9 @@ export async function handleCompanion(request: IncomingMessage, response: Server
   }
 
   let providerResponse: Response
+  let providerBody: string
   try {
-    providerResponse = await fetchWithTimeout(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    const result = await fetchTextWithTimeout(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -130,6 +131,8 @@ export async function handleCompanion(request: IncomingMessage, response: Server
         ],
       }),
     }, 12_000)
+    providerResponse = result.response
+    providerBody = result.body
   } catch (error) {
     const status = error instanceof ProviderTimeoutError ? 504 : 502
     const message = error instanceof ProviderTimeoutError ? error.message : 'Companion provider is unavailable'
@@ -146,7 +149,7 @@ export async function handleCompanion(request: IncomingMessage, response: Server
   }
 
   try {
-    const data = await providerResponse.json() as CompanionProviderResponse
+    const data = JSON.parse(providerBody) as CompanionProviderResponse
     const reply = data.choices?.[0]?.message?.content?.trim()
     if (!reply) throw new Error('Provider returned no message')
     writeJson(response, 200, { reply: reply.slice(0, 1600), requestId })
@@ -155,11 +158,13 @@ export async function handleCompanion(request: IncomingMessage, response: Server
   }
 }
 
-async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: number) {
+async function fetchTextWithTimeout(input: string, init: RequestInit, timeoutMs: number) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    return await fetch(input, { ...init, signal: controller.signal })
+    const response = await fetch(input, { ...init, signal: controller.signal })
+    const body = await response.text()
+    return { response, body }
   } catch (error) {
     if (controller.signal.aborted || (error instanceof Error && error.name === 'AbortError')) {
       throw new ProviderTimeoutError()
