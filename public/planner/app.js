@@ -1349,27 +1349,206 @@
   }
 
   document.addEventListener('submit', async (e) => {
+    if (!(e.target instanceof HTMLFormElement)) return;
     e.preventDefault();
+
     const form = e.target;
     const fd = new FormData(form);
+
     if (form.id === 'task-form') {
-      const id = fd.get('id') || uid('task');
-      const existing = state.tasks.find(t=>t.id===id);
-      const item = { id, title: fd.get('title').trim(), description: fd.get('description').trim(), status: fd.get('status'), priority: fd.get('priority'), category: fd.get('category'), scheduledDate: fd.get('scheduledDate')||null, deadline: fd.get('deadline')||null, durationMinutes: Number(fd.get('durationMinutes')), timerType:'standard', nextStep:fd.get('nextStep').trim(), waitingOn: existing?.waitingOn||'', projectId:existing?.projectId||null, createdAt:existing?.createdAt||Date.now(), completedAt: fd.get('status')==='complete' ? (existing?.completedAt||Date.now()) : null };
-      if(existing) Object.assign(existing,item); else state.tasks.push(item); saveState();closeModal();renderApp();toast('Task saved.');
+      const title = formString(fd, 'title');
+      if (!title) { toast('Task title is required.'); return; }
+      const id = formString(fd, 'id') || uid('task');
+      const existing = state.tasks.find(t => t.id === id);
+      const status = formString(fd, 'status');
+      const item = {
+        id,
+        title,
+        description: formString(fd, 'description'),
+        status: STATUSES.includes(status) ? status : 'ready',
+        priority: Object.prototype.hasOwnProperty.call(PRIORITY_WEIGHT, formString(fd, 'priority')) ? formString(fd, 'priority') : 'normal',
+        category: formString(fd, 'category') || 'personal',
+        scheduledDate: formString(fd, 'scheduledDate') || null,
+        deadline: formString(fd, 'deadline') || null,
+        durationMinutes: [30, 60].includes(Number(formString(fd, 'durationMinutes'))) ? Number(formString(fd, 'durationMinutes')) : 30,
+        timerType: 'standard',
+        nextStep: formString(fd, 'nextStep'),
+        waitingOn: existing?.waitingOn || '',
+        projectId: existing?.projectId || null,
+        createdAt: existing?.createdAt || Date.now(),
+        completedAt: status === 'complete' ? (existing?.completedAt || Date.now()) : null,
+      };
+      if (existing) Object.assign(existing, item);
+      else state.tasks.push(item);
+      saveState();
+      closeModal();
+      renderApp();
+      toast('Task saved.');
+      return;
     }
+
     if (form.id === 'assignment-form') {
-      const id=fd.get('id')||uid('school'); const existing=state.schoolAssignments.find(x=>x.id===id); const item={id,course:fd.get('course'),title:fd.get('title').trim(),status:fd.get('status'),dueDate:fd.get('dueDate')||null,submissionStatus:fd.get('submissionStatus').trim(),gradeOutcome:fd.get('gradeOutcome').trim(),feedback:fd.get('feedback').trim(),nextWritingStep:fd.get('nextWritingStep').trim(),notes:existing?.notes||''}; if(existing)Object.assign(existing,item);else state.schoolAssignments.push(item);saveState();closeModal();renderApp();toast('Assignment saved.');
+      const title = formString(fd, 'title');
+      if (!title) { toast('Assignment title is required.'); return; }
+      const id = formString(fd, 'id') || uid('school');
+      const existing = state.schoolAssignments.find(x => x.id === id);
+      const item = {
+        id,
+        course: formString(fd, 'course'),
+        title,
+        status: formString(fd, 'status') || 'planned',
+        dueDate: formString(fd, 'dueDate') || null,
+        submissionStatus: formString(fd, 'submissionStatus'),
+        gradeOutcome: formString(fd, 'gradeOutcome'),
+        feedback: formString(fd, 'feedback'),
+        nextWritingStep: formString(fd, 'nextWritingStep'),
+        notes: existing?.notes || '',
+      };
+      if (existing) Object.assign(existing, item);
+      else state.schoolAssignments.push(item);
+      saveState();
+      closeModal();
+      renderApp();
+      toast('Assignment saved.');
+      return;
     }
+
     if (form.id === 'project-form') {
-      const id=fd.get('id')||uid('proj'); const existing=state.projects.find(x=>x.id===id); const item={id,name:fd.get('name').trim(),area:fd.get('area').trim(),status:fd.get('status'),priority:fd.get('priority'),currentPhase:fd.get('currentPhase').trim(),nextAction:fd.get('nextAction').trim(),progressPercent:Number(fd.get('progressPercent'))||0,notes:fd.get('notes').trim()}; if(existing)Object.assign(existing,item);else state.projects.push(item);saveState();closeModal();renderApp();toast('Project saved.');
+      const name = formString(fd, 'name');
+      if (!name) { toast('Project name is required.'); return; }
+      const id = formString(fd, 'id') || uid('proj');
+      const existing = state.projects.find(x => x.id === id);
+      const item = {
+        id,
+        name,
+        area: formString(fd, 'area') || 'Personal',
+        status: formString(fd, 'status') || 'active',
+        priority: formString(fd, 'priority') || 'normal',
+        currentPhase: formString(fd, 'currentPhase'),
+        nextAction: formString(fd, 'nextAction'),
+        progressPercent: Math.max(0, Math.min(100, Number(formString(fd, 'progressPercent')) || 0)),
+        notes: formString(fd, 'notes'),
+      };
+      if (existing) Object.assign(existing, item);
+      else state.projects.push(item);
+      saveState();
+      closeModal();
+      renderApp();
+      toast('Project saved.');
+      return;
     }
-    if (form.id === 'idea-form') { state.ideas.push({id:uid('idea'),title:fd.get('title').trim(),zone:fd.get('zone'),notes:fd.get('notes').trim(),createdAt:Date.now()});saveState();closeModal();renderApp();toast('Idea captured.'); }
+
+    if (form.id === 'idea-form') {
+      const title = formString(fd, 'title');
+      if (!title) { toast('Idea title is required.'); return; }
+      state.ideas.push({
+        id: uid('idea'),
+        title,
+        zone: formString(fd, 'zone') || 'incubate',
+        notes: formString(fd, 'notes'),
+        createdAt: Date.now(),
+      });
+      saveState();
+      closeModal();
+      renderApp();
+      toast('Idea captured.');
+      return;
+    }
+
     if (form.id === 'memory-form') {
-      try { const photo=fd.get('photo'); const imageDataUrl=photo&&photo.size?await fileToDataUrl(photo):''; state.memories.push({id:uid('memory'),date:fd.get('date'),title:fd.get('title').trim(),caption:fd.get('caption').trim(),category:fd.get('category'),people:fd.get('people').trim(),favorite:fd.get('favorite')==='on',imageDataUrl,notes:''});saveState();closeModal();renderApp();toast('Memory saved.'); } catch(err){alert(err.message);}
+      const title = formString(fd, 'title');
+      if (!title) { toast('Memory title is required.'); return; }
+      try {
+        const photo = fd.get('photo');
+        const imageDataUrl = photo instanceof File && photo.size ? await fileToDataUrl(photo) : '';
+        state.memories.push({
+          id: uid('memory'),
+          date: formString(fd, 'date') || isoDateLocal(),
+          title,
+          caption: formString(fd, 'caption'),
+          category: formString(fd, 'category') || 'Random',
+          people: formString(fd, 'people'),
+          favorite: formString(fd, 'favorite') === 'on',
+          imageDataUrl,
+          notes: '',
+        });
+        saveState();
+        closeModal();
+        renderApp();
+        toast('Memory saved.');
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'The memory could not be saved.');
+      }
+      return;
     }
-    if (form.id === 'favorite-form') { state.favorites.push({id:uid('fav'),type:fd.get('type'),title:fd.get('title').trim(),status:fd.get('status'),rating:Number(fd.get('rating'))||null,notes:fd.get('notes').trim(),imageDataUrl:''});saveState();closeModal();renderApp();toast('Added to Currently.'); }
-    if (form.id === 'brain-lines-form') { const lines=JSON.parse(fd.get('linesJson')); const picks=fd.getAll('line').map(Number); picks.forEach(i=>state.tasks.push({id:uid('task'),title:lines[i],description:'Created from Brain Dump.',status:'inbox',priority:'normal',category:'personal',scheduledDate:null,deadline:null,durationMinutes:30,timerType:'standard',nextStep:'',waitingOn:'',projectId:null,createdAt:Date.now(),completedAt:null})); const dump=state.brainDumps.find(d=>d.id===form.dataset.id); if(d)dump.extractedTaskIds.push(...state.tasks.slice(-picks.length).map(t=>t.id));saveState();closeModal();renderApp();toast(`${picks.length} task${picks.length===1?'':'s'} created.`); }
+
+    if (form.id === 'favorite-form') {
+      const title = formString(fd, 'title');
+      if (!title) { toast('A title is required.'); return; }
+      const ratingValue = Number(formString(fd, 'rating'));
+      state.favorites.push({
+        id: uid('fav'),
+        type: formString(fd, 'type') || 'other',
+        title,
+        status: formString(fd, 'status') || 'current',
+        rating: Number.isFinite(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null,
+        notes: formString(fd, 'notes'),
+        imageDataUrl: '',
+      });
+      saveState();
+      closeModal();
+      renderApp();
+      toast('Added to Currently.');
+      return;
+    }
+
+    if (form.id === 'brain-lines-form') {
+      let lines;
+      try {
+        const parsed = JSON.parse(formString(fd, 'linesJson'));
+        lines = Array.isArray(parsed) ? parsed.filter(line => typeof line === 'string') : [];
+      } catch {
+        lines = [];
+      }
+      const picks = [...new Set(fd.getAll('line').map(Number))]
+        .filter(index => Number.isInteger(index) && index >= 0 && index < lines.length);
+      if (!picks.length) { toast('Choose at least one valid line.'); return; }
+
+      const createdIds = [];
+      for (const index of picks) {
+        const title = lines[index].trim();
+        if (!title) continue;
+        const id = uid('task');
+        createdIds.push(id);
+        state.tasks.push({
+          id,
+          title,
+          description: 'Created from Brain Dump.',
+          status: 'inbox',
+          priority: 'normal',
+          category: 'personal',
+          scheduledDate: null,
+          deadline: null,
+          durationMinutes: 30,
+          timerType: 'standard',
+          nextStep: '',
+          waitingOn: '',
+          projectId: null,
+          createdAt: Date.now(),
+          completedAt: null,
+        });
+      }
+      if (!createdIds.length) { toast('No valid tasks were created.'); return; }
+      const dump = state.brainDumps.find(d => d.id === form.dataset.id);
+      if (dump) {
+        if (!Array.isArray(dump.extractedTaskIds)) dump.extractedTaskIds = [];
+        dump.extractedTaskIds.push(...createdIds);
+      }
+      saveState();
+      closeModal();
+      renderApp();
+      toast(`${createdIds.length} task${createdIds.length === 1 ? '' : 's'} created.`);
+    }
   });
 
   function moveDashboardWidget(id, delta) {
