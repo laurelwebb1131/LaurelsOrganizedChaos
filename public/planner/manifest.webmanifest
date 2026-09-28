@@ -1,0 +1,9 @@
+{
+  "name": "Laurel's Organized Chaos Planner",
+  "short_name": "Organized Chaos",
+  "start_url": "./index.html#dashboard",
+  "display": "standalone",
+  "background_color": "#100d14",
+  "theme_color": "#100d14",
+  "description": "A gothic scrapbook life planner."
+}
