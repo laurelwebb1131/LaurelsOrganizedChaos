@@ -68,14 +68,26 @@
 
     (async () => {
       try {
-        const [css, js] = await Promise.all([
+        const [css, js, step2Css, step2Js] = await Promise.all([
           gunzipBase64(['./payload/style-0.txt', './payload/style-1.txt']),
-          gunzipBase64(['./payload/app-0.txt', './payload/app-1.txt', './payload/app-2.txt', './payload/app-3.txt'])
+          gunzipBase64(['./payload/app-0.txt', './payload/app-1.txt', './payload/app-2.txt', './payload/app-3.txt']),
+          gunzipBase64(['./payload/step2-style-0.txt']),
+          gunzipBase64(['./payload/step2-app-0.txt'])
         ]);
-        const style = document.createElement('style');
-        style.textContent = css;
-        document.head.appendChild(style);
+
+        const baseStyle = document.createElement('style');
+        baseStyle.textContent = css;
+        baseStyle.dataset.layer = 'planner-base';
+        document.head.appendChild(baseStyle);
+
         new Function(js)();
+
+        const polishStyle = document.createElement('style');
+        polishStyle.textContent = step2Css;
+        polishStyle.dataset.layer = 'planner-step2';
+        document.head.appendChild(polishStyle);
+
+        new Function(step2Js)();
       } catch (error) {
         console.error(error);
         document.getElementById('main-content').innerHTML =
