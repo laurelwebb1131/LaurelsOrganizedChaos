@@ -1,9 +1,39 @@
 {
+  "id": "./",
   "name": "Laurel's Organized Chaos Planner",
   "short_name": "Organized Chaos",
-  "start_url": "./index.html#dashboard",
+  "description": "A local-first gothic scrapbook planner for daily life, school, projects, home, ideas, goals, and memories.",
+  "start_url": "./#dashboard",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
   "background_color": "#100d14",
   "theme_color": "#100d14",
-  "description": "A gothic scrapbook life planner."
+  "categories": ["productivity", "lifestyle", "education"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "url": "./#today"
+    },
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "url": "./#calendar"
+    },
+    {
+      "name": "Brain Dump",
+      "short_name": "Brain Dump",
+      "url": "./#brain"
+    }
+  ]
 }
