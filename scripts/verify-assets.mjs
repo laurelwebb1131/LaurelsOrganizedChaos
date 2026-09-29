@@ -1,6 +1,10 @@
 import { access, readFile } from 'node:fs/promises'
 
-const raw = await readFile('public/assets/ASSET_MANIFEST.json', 'utf8')
+const [raw, attribution] = await Promise.all([
+  readFile('public/assets/ASSET_MANIFEST.json', 'utf8'),
+  readFile('public/assets/ATTRIBUTION.md', 'utf8'),
+])
+
 let manifest
 
 try {
@@ -44,6 +48,13 @@ for (const [index, asset] of manifest.assets.entries()) {
   } catch {
     problems.push(`missing file: ${asset.file}`)
   }
+
+  if (!attribution.includes(`${asset.file}`)) {
+    problems.push(`attribution is missing manifest path: ${asset.file}`)
+  }
+  if (typeof asset.name === 'string' && asset.name.trim() && !attribution.includes(asset.name)) {
+    problems.push(`attribution is missing asset name: ${asset.name}`)
+  }
 }
 
 if (problems.length) {
@@ -51,4 +62,4 @@ if (problems.length) {
   process.exit(1)
 }
 
-console.log(`Verified ${manifest.assets.length} licensed CC0 assets and manifest records.`)
+console.log(`Verified ${manifest.assets.length} licensed CC0 assets, files, and attribution records.`)
