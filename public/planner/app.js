@@ -532,9 +532,19 @@
     console.warn(`${storageWriteBlockedReason} The original JSON was preserved under ${UNSUPPORTED_STATE_BACKUP_KEY} and automatic writes are blocked.`);
   }
 
+  function parseCompatibleState(raw, { preserveUnsupported = false } = {}) {
+    const parsed = JSON.parse(raw);
+    if (!isPlainObject(parsed)) throw new Error('Stored planner data is not an object.');
+    if (parsed.version !== STATE_VERSION) {
+      if (preserveUnsupported) preserveUnsupportedState(raw, parsed.version);
+      throw new Error(`Unsupported planner data version: ${String(parsed.version)}`);
+    }
+    return hydrateState(parsed);
+  }
+
   function restoreLastPersistedState() {
     try {
-      state = hydrateState(JSON.parse(lastPersistedStateJson));
+      state = parseCompatibleState(lastPersistedStateJson);
       return true;
     } catch (restoreError) {
       console.error('Could not restore the last saved planner state', restoreError);
@@ -546,13 +556,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaultState();
-      const parsed = JSON.parse(raw);
-      if (!isPlainObject(parsed)) throw new Error('Stored planner data is not an object.');
-      if (parsed.version !== STATE_VERSION) {
-        preserveUnsupportedState(raw, parsed.version);
-        return defaultState();
-      }
-      return hydrateState(parsed);
+      return parseCompatibleState(raw, { preserveUnsupported: true });
     } catch (err) {
       console.warn('Could not load planner data', err);
       return defaultState();
@@ -1917,7 +1921,7 @@
     if(choice==='postpone' && t)t.status='postponed';
     if(choice==='switch' && t)t.status='ready';
     if(choice==='reprioritize' && t)t.status='ready';
-    resetTimer(); closeModal(); renderApp();
+    resetTimer(); closeModal();
     if(choice==='reprioritize') setRoute('week');
   }
 
@@ -1969,7 +1973,7 @@
       const parsed = JSON.parse(text);
       const looksValid = parsed && parsed.version === STATE_VERSION && Array.isArray(parsed.tasks) && parsed.dailyEntries && typeof parsed.dailyEntries === 'object';
       if (!looksValid) throw new Error('This does not look like a valid Organized Chaos planner backup.');
-      const restored = hydrateState(parsed);
+      const restored = parseCompatibleState(text);
       if (!Array.isArray(restored.routineAnchors) || !Array.isArray(restored.projects) || !Array.isArray(restored.schoolAssignments)) {
         throw new Error('The backup is missing required planner data.');
       }
@@ -2111,7 +2115,13 @@
   window.addEventListener('storage', (e) => {
     if (e.key !== STORAGE_KEY) return;
     try {
-      state = e.newValue ? hydrateState(JSON.parse(e.newValue)) : defaultState();
+      if (!e.newValue) {
+        storageWriteBlockedReason = '';
+        state = defaultState();
+      } else {
+        state = parseCompatibleState(e.newValue, { preserveUnsupported: true });
+        storageWriteBlockedReason = '';
+      }
       lastPersistedStateJson = JSON.stringify(state);
       renderApp();
     } catch (error) {
