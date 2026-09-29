@@ -528,12 +528,18 @@
 
   function preserveUnreadableState(raw, reason) {
     storageWriteBlockedReason = reason;
+    let recoveryStored = false;
     try {
       localStorage.setItem(STATE_RECOVERY_KEY, raw);
+      recoveryStored = true;
     } catch (backupError) {
       console.error('Could not preserve the planner state recovery copy', backupError);
     }
-    console.warn(`${storageWriteBlockedReason} The original stored value was preserved under ${STATE_RECOVERY_KEY} and automatic writes are blocked.`);
+    const recoveryNote = recoveryStored
+      ? `The original stored value was preserved under ${STATE_RECOVERY_KEY}.`
+      : 'The browser could not create a separate recovery copy, so do not clear site storage.';
+    console.warn(`${storageWriteBlockedReason} ${recoveryNote} Automatic writes are blocked.`);
+    return recoveryStored;
   }
 
   function preserveUnsupportedState(raw, version) {
@@ -561,7 +567,14 @@
   }
 
   function loadState() {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw;
+    try {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } catch (err) {
+      storageWriteBlockedReason = 'Browser storage is unavailable, so planner changes cannot be saved safely.';
+      console.warn('Could not access planner storage', err);
+      return defaultState();
+    }
     if (!raw) return defaultState();
     try {
       return parseCompatibleState(raw, { preserveUnsupported: true });
@@ -579,7 +592,7 @@
     if (storageWriteBlockedReason) {
       console.error('Planner save blocked:', storageWriteBlockedReason);
       restoreLastPersistedState();
-      toast('This planner data was created by an unsupported version, so this build will not overwrite it. Import a compatible backup or reset the planner to continue.');
+      toast('Stored planner data could not be loaded safely, so automatic writes are blocked. Export the recovery copy or import a compatible backup before resetting.');
       applyTheme();
       if (render) renderApp();
       return false;
@@ -1495,6 +1508,7 @@
 
     const safeMaxWidth = Math.max(1, finiteNumber(maxWidth, 1400));
     const safeQuality = Math.max(.1, Math.min(.95, finiteNumber(quality, .82)));
+    const maxCanvasPixels = 3_000_000;
     const raw = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ''));
@@ -1507,7 +1521,9 @@
       img.onload = () => {
         try {
           if (!img.width || !img.height) throw new Error('The selected image has invalid dimensions.');
-          const ratio = Math.min(1, safeMaxWidth / img.width);
+          const widthScale = safeMaxWidth / img.width;
+          const pixelScale = Math.sqrt(maxCanvasPixels / (img.width * img.height));
+          const ratio = Math.min(1, widthScale, pixelScale);
           const canvas = document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(img.width * ratio));
           canvas.height = Math.max(1, Math.round(img.height * ratio));
@@ -1966,24 +1982,44 @@
     state.projects.push({id:uid('proj'),name:idea.title,area:'Idea',status:'idea',priority:'normal',currentPhase:'Captured idea promoted from Idea Garden.',nextAction:'Define the first real next step before activating.',progressPercent:0,notes:idea.notes||''});idea.zone='later';saveState({render:true});toast('Idea promoted to Projects.');
   }
 
-  function exportJson() {
-    const payload = {
-      ...state,
-      backupMeta: {
-        schema: 'laurels-organized-chaos-planner',
-        schemaVersion: 1,
-        exportedAt: new Date().toISOString()
-      }
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  function downloadTextFile(text, filename, type = 'application/json') {
+    const blob = new Blob([text], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `organized-chaos-backup-${isoDateLocal()}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  function exportJson() {
+    if (storageWriteBlockedReason) {
+      let recovery = '';
+      try {
+        recovery = localStorage.getItem(STATE_RECOVERY_KEY) || '';
+      } catch (error) {
+        console.warn('Could not read the planner recovery copy', error);
+      }
+      if (!recovery) {
+        alert('Planner storage is blocked and no separate recovery copy is available. Do not reset or clear site storage until you have recovered the original browser data.');
+        return;
+      }
+      downloadTextFile(recovery, `organized-chaos-recovery-${isoDateLocal()}.json`);
+      toast('Recovery copy exported exactly as stored. It may need repair before it can be imported.');
+      return;
+    }
+
+    const payload = {
+      ...state,
+      backupMeta: {
+        schema: 'laurels-organized-chaos-planner',
+        schemaVersion: STATE_VERSION,
+        exportedAt: new Date().toISOString()
+      }
+    };
+    downloadTextFile(JSON.stringify(payload, null, 2), `organized-chaos-backup-${isoDateLocal()}.json`);
     toast('Backup exported.');
   }
 
@@ -2002,7 +2038,12 @@
       if (!confirm('Import this backup and replace current local planner data? A temporary pre-import recovery copy will be saved in this browser first.')) return;
       const previousState = state;
       const previousStorageBlock = storageWriteBlockedReason;
-      try { localStorage.setItem(STORAGE_KEY + '-pre-import', JSON.stringify(previousState)); } catch (_) {}
+      try {
+        const previousRaw = localStorage.getItem(STORAGE_KEY) || JSON.stringify(previousState);
+        localStorage.setItem(STORAGE_KEY + '-pre-import', previousRaw);
+      } catch (backupError) {
+        console.warn('Could not create the pre-import browser recovery copy', backupError);
+      }
       storageWriteBlockedReason = '';
       state = restored;
       if (!saveState()) {
