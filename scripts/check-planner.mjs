@@ -26,6 +26,7 @@ check(!styles.includes('DASHBOARD GRIMOIRE PASS') || styles.includes('BUILD 1 â€
 
 check(index.includes('./styles.css') && index.includes('./app.js'), 'index.html must load readable production assets')
 check(!index.includes('payload/') && !index.includes('DecompressionStream'), 'index.html still references obsolete compressed payload loading')
+check(index.includes('id="mobile-menu"') && index.includes('aria-controls="sidebar"') && index.includes('aria-expanded="false"'), 'mobile navigation button must expose sidebar state')
 
 const requiredDomIds = [
   'app-shell',
@@ -57,6 +58,10 @@ check(serviceWorker.includes("self.addEventListener('fetch'"), 'service worker f
 check(serviceWorker.includes('networkFirst('), 'service worker must keep the network-first strategy')
 
 check(app.includes("const STORAGE_KEY = 'loc_planner_v1'"), 'planner storage key changed unexpectedly')
+check(app.includes('const STATE_VERSION = 1'), 'planner state version constant changed unexpectedly')
+check(app.includes('const STATE_RECOVERY_KEY ='), 'planner recovery storage key is missing')
+check(app.includes('function parseCompatibleState('), 'planner state compatibility parser is missing')
+check(app.includes('function preserveUnreadableState('), 'planner unreadable-state recovery is missing')
 check(app.includes('function hydrateState('), 'planner state hydration is missing')
 check(app.includes('function renderCover()'), 'cover renderer is missing')
 check(app.includes("location.hash='cover'"), 'planner must default to the cover route')
@@ -83,6 +88,14 @@ for (const renderer of requiredRenderers) check(app.includes(`function ${rendere
 const requiredRoutes = ['dashboard','today','week','calendar','school','projects','home','brain','goals','scrapbook','settings']
 for (const route of requiredRoutes) check(app.includes(`['${route}',`), `route ${route} is missing from navigation`)
 
+check(app.includes('function finishTimerEarly()'), 'early timer finish handling is missing')
+check(app.includes('function recordCompletedActivity('), 'task completion deduplication helper is missing')
+check(app.includes('function handleModalKeydown('), 'modal keyboard containment is missing')
+check(app.includes('function handleDocumentClick(') && app.includes("document.addEventListener('click', handleDocumentClick)"), 'delegated click handler must remain named and registered')
+check(app.includes('function handleDocumentChange(') && app.includes("document.addEventListener('change', handleDocumentChange)"), 'delegated change handler must remain named and registered')
+check(app.includes('function handleDocumentInput(') && app.includes("document.addEventListener('input', handleDocumentInput)"), 'delegated input handler must remain named and registered')
+check(app.includes('function handleDocumentSubmit(') && app.includes("document.addEventListener('submit', handleDocumentSubmit)"), 'delegated submit handler must remain named and registered')
+check(app.includes("document.addEventListener('pointercancel', finishPointerDrag)"), 'pointer drag cancellation cleanup is missing')
 check(app.includes("navigator.serviceWorker.register('./sw.js')"), 'planner service worker registration is missing')
 check(!app.includes('payload/'), 'planner app still references obsolete compressed payload files')
 
