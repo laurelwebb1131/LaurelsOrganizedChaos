@@ -2022,6 +2022,8 @@
   }
 
   let draggedDashboardWidget = null;
+  let draggedPageSection = null;
+
   document.addEventListener('dragstart', (e) => {
     if (!(e.target instanceof Element)) return;
     const widget = e.target.closest('[data-dashboard-widget]');
@@ -2053,9 +2055,9 @@
   document.addEventListener('dragend', () => {
     document.querySelectorAll('.dragging,.drag-over').forEach(x => x.classList.remove('dragging','drag-over'));
     draggedDashboardWidget = null;
+    draggedPageSection = null;
   });
 
-  let draggedPageSection = null;
   document.addEventListener('dragstart', (e) => {
     if (!(e.target instanceof Element)) return;
     const section=e.target.closest('[data-page-section]');
@@ -2084,24 +2086,31 @@
       const sticker=e.target.closest('[data-decoration-id]');
       if(sticker && !e.target.closest('[data-action]')) {
         const item=state.decorations.find(d=>d.id===sticker.dataset.decorationId); if(!item)return;
-        pointerDrag={kind:'sticker',id:item.id,startX:e.clientX,startY:e.clientY,origX:item.x,origY:item.y,el:sticker}; sticker.setPointerCapture?.(e.pointerId); e.preventDefault(); return;
+        pointerDrag={kind:'sticker',id:item.id,startX:e.clientX,startY:e.clientY,origX:item.x,origY:item.y,el:sticker,pointerId:e.pointerId}; sticker.setPointerCapture?.(e.pointerId); e.preventDefault(); return;
       }
     }
     if(state.ui.scrapbookBoardMode && route()==='scrapbook') {
       const pol=e.target.closest('[data-memory-id]');
-      if(pol) { const id=pol.dataset.memoryId,pos=state.ui.scrapbookPositions[id]||{}; pointerDrag={kind:'memory',id,startX:e.clientX,startY:e.clientY,origX:pos.x ?? (parseFloat(pol.style.left)||0),origY:pos.y ?? (parseFloat(pol.style.top)||0),el:pol}; pol.setPointerCapture?.(e.pointerId); e.preventDefault(); }
+      if(pol) { const id=pol.dataset.memoryId,pos=state.ui.scrapbookPositions[id]||{}; pointerDrag={kind:'memory',id,startX:e.clientX,startY:e.clientY,origX:pos.x ?? (parseFloat(pol.style.left)||0),origY:pos.y ?? (parseFloat(pol.style.top)||0),el:pol,pointerId:e.pointerId}; pol.setPointerCapture?.(e.pointerId); e.preventDefault(); }
     }
   });
   document.addEventListener('pointermove', (e) => {
     if(!pointerDrag)return; const dx=e.clientX-pointerDrag.startX,dy=e.clientY-pointerDrag.startY; const x=Math.max(0,pointerDrag.origX+dx),y=Math.max(0,pointerDrag.origY+dy);
     pointerDrag.el.style.left=`${x}px`; pointerDrag.el.style.top=`${y}px`; pointerDrag.x=x; pointerDrag.y=y;
   });
-  document.addEventListener('pointerup', () => {
-    if(!pointerDrag)return;
+  function finishPointerDrag() {
+    if (!pointerDrag) return;
     if(pointerDrag.kind==='sticker'){const item=state.decorations.find(d=>d.id===pointerDrag.id); if(item){item.x=Math.round(pointerDrag.x??item.x);item.y=Math.round(pointerDrag.y??item.y);}}
     if(pointerDrag.kind==='memory'){const old=state.ui.scrapbookPositions[pointerDrag.id]||{};state.ui.scrapbookPositions[pointerDrag.id]={...old,x:Math.round(pointerDrag.x??old.x??0),y:Math.round(pointerDrag.y??old.y??0),rotate:old.rotate??0};}
-    saveState(); pointerDrag=null;
-  });
+    try {
+      if (pointerDrag.el?.hasPointerCapture?.(pointerDrag.pointerId)) pointerDrag.el.releasePointerCapture(pointerDrag.pointerId);
+    } catch (_) {}
+    saveState();
+    pointerDrag = null;
+  }
+
+  document.addEventListener('pointerup', finishPointerDrag);
+  document.addEventListener('pointercancel', finishPointerDrag);
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
