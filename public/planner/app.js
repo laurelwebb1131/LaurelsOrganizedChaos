@@ -1,5 +1,5 @@
 /* Laurel's Organized Chaos Planner
-   Local-first planner engine + Step 2 page polish.
+   Local-first planner engine.
    Data is stored in browser localStorage. */
 
 (() => {
@@ -2000,7 +2000,18 @@
     }
   }
 
-  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');}
+  function setSidebarOpen(open) {
+    const sidebar = document.getElementById('sidebar');
+    const menu = document.getElementById('mobile-menu');
+    if (!sidebar || !menu) return;
+    sidebar.classList.toggle('open', open);
+    menu.setAttribute('aria-expanded', String(open));
+    menu.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+
+  function closeSidebar() {
+    setSidebarOpen(false);
+  }
 
   let draggedDashboardWidget = null;
   document.addEventListener('dragstart', (e) => {
@@ -2088,7 +2099,10 @@
     e.preventDefault();
     installPromptEvent = e;
   });
-  document.getElementById('mobile-menu')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('open'));
+  document.getElementById('mobile-menu')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    setSidebarOpen(!sidebar?.classList.contains('open'));
+  });
   document.getElementById('quick-add-mobile')?.addEventListener('click', () => quickTaskModal());
   document.getElementById('floating-add')?.addEventListener('click', () => quickTaskModal());
   document.getElementById('modal-close')?.addEventListener('click', closeModal);
@@ -2141,7 +2155,7 @@
 })();
 
 
-/* ===== Step 2 page-design completion ===== */
+/* ===== Legacy visual annotation layer; preserve until CSS cleanup ===== */
 (() => {
   'use strict';
 
