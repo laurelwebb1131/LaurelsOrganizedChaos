@@ -107,6 +107,10 @@
 
   function toast(message) {
     const region = document.getElementById('toast-region');
+    if (!region) {
+      console.warn('Planner toast region is unavailable:', message);
+      return;
+    }
     const el = document.createElement('div');
     el.className = 'toast';
     el.textContent = message;
@@ -659,8 +663,13 @@
   function renderApp() {
     const current = route();
     if (current !== 'cover') ensureToday();
-    document.getElementById('main-nav').innerHTML = navHtml();
+    const nav = document.getElementById('main-nav');
     const content = document.getElementById('main-content');
+    if (!nav || !content) {
+      console.error('Planner shell is missing required navigation or content elements.');
+      return;
+    }
+    nav.innerHTML = navHtml();
     const renderers = {
       cover: renderCover, dashboard: renderDashboard, today: renderToday, week: renderWeek, calendar: renderCalendar,
       school: renderSchool, projects: renderProjects, home: renderHome, brain: renderBrain,
@@ -1548,7 +1557,7 @@
 
     if (action === 'toggle-planner-edit') { state.ui.plannerEditMode = !state.ui.plannerEditMode; state.ui.dashboardEditMode = state.ui.plannerEditMode; saveState({render:true}); return; }
     if (action === 'open-sticker-tray') { stickerTrayModal(); return; }
-    if (action === 'add-decoration') { state.decorations.push({id:uid('sticker'),page:route(),type:el.dataset.value,x:80+Math.round(Math.random()*160),y:160+Math.round(Math.random()*180),rotate:Math.round(Math.random()*12-6),scale:1}); saveState(); closeModal(); renderApp(); toast('Sticker added. Drag it where it belongs.'); return; }
+    if (action === 'add-decoration') { const type=el.dataset.value; if(!STICKER_TYPES.includes(type))return; state.decorations.push({id:uid('sticker'),page:route(),type,x:80+Math.round(Math.random()*160),y:160+Math.round(Math.random()*180),rotate:Math.round(Math.random()*12-6),scale:1}); saveState(); closeModal(); renderApp(); toast('Sticker added. Drag it where it belongs.'); return; }
     if (action === 'delete-decoration') { state.decorations = state.decorations.filter(d=>d.id!==id); saveState({render:true}); return; }
     if (action === 'rotate-decoration') { const d=state.decorations.find(x=>x.id===id); if(d){d.rotate=((d.rotate||0)+15)%360;saveState({render:true});} return; }
     if (action === 'scale-decoration') { const d=state.decorations.find(x=>x.id===id); if(d){d.scale=(d.scale||1)>=1.6?.8:Math.round(((d.scale||1)+.2)*10)/10;saveState({render:true});} return; }
@@ -1556,7 +1565,7 @@
     if (action === 'move-page-section-up') { movePageSection(el.dataset.page,id,-1); return; }
     if (action === 'move-page-section-down') { movePageSection(el.dataset.page,id,1); return; }
     if (action === 'toggle-scrapbook-board') { state.ui.scrapbookBoardMode = !state.ui.scrapbookBoardMode; saveState({render:true}); return; }
-    if (action === 'set-accent-theme') { state.settings.accentTheme = el.dataset.value; saveState({render:true}); return; }
+    if (action === 'set-accent-theme') { const theme=el.dataset.value; if(!ACCENT_THEMES.includes(theme))return; state.settings.accentTheme = theme; saveState({render:true}); return; }
     if (action === 'clear-custom-background') { state.settings.customBackgroundDataUrl=''; saveState({render:true}); return; }
     if (action === 'clear-hero-photo') { state.settings.heroPhotoDataUrl=''; saveState({render:true}); return; }
     if (action === 'install-app') { if (installPromptEvent) { installPromptEvent.prompt(); const result=await installPromptEvent.userChoice; if(result?.outcome==='accepted') toast('Planner installation started.'); installPromptEvent=null; } else toast('Your browser will show Install when this planner is eligible.'); return; }
@@ -1567,8 +1576,8 @@
     if (action === 'complete-task') completeTask(id);
     if (action === 'reopen-task') { const t=state.tasks.find(x=>x.id===id); if(t){t.status='ready';t.completedAt=null;saveState({render:true});} }
     if (action === 'start-task') startTimer(30, id);
-    if (action === 'set-energy') { ensureToday().energy = el.dataset.value; saveState({render:true}); }
-    if (action === 'toggle-mood') { const d=ensureToday(); const m=el.dataset.value; d.moodTags = d.moodTags.includes(m) ? d.moodTags.filter(x=>x!==m) : [...d.moodTags,m]; saveState({render:true}); }
+    if (action === 'set-energy') { const energy=el.dataset.value; if(ENERGY.includes(energy)){ensureToday().energy=energy;saveState({render:true});} }
+    if (action === 'toggle-mood') { const d=ensureToday(); const m=el.dataset.value; if(MOODS.includes(m)){d.moodTags=d.moodTags.includes(m)?d.moodTags.filter(x=>x!==m):[...d.moodTags,m];saveState({render:true});} }
     if (action === 'timer-start-30') startTimer(30);
     if (action === 'timer-start-60') startTimer(60);
     if (action === 'timer-pause') pauseResumeTimer();
@@ -1585,8 +1594,8 @@
     if (action === 'add-grocery') addGrocery();
     if (action === 'toggle-grocery') { const g=state.home.groceries.find(x=>x.id===id); if(g){g.done=!g.done;saveState({render:true});} }
     if (action === 'delete-grocery') { state.home.groceries=state.home.groceries.filter(x=>x.id!==id);saveState({render:true}); }
-    if (action === 'save-brain-dump') saveBrainDump(document.getElementById('brain-raw').value);
-    if (action === 'save-dashboard-brain') { const raw=document.getElementById('dashboard-brain').value; if(raw.trim()){saveBrainDump(raw); document.getElementById('dashboard-brain').value=''; toast('Thought trapped.');} }
+    if (action === 'save-brain-dump') { const input=document.getElementById('brain-raw'); if(input instanceof HTMLTextAreaElement) saveBrainDump(input.value); }
+    if (action === 'save-dashboard-brain') { const input=document.getElementById('dashboard-brain'); if(input instanceof HTMLTextAreaElement && input.value.trim()){const raw=input.value;saveBrainDump(raw);input.value='';toast('Thought trapped.');} }
     if (action === 'brain-lines') brainLinesModal(state.brainDumps.find(d=>d.id===id));
     if (action === 'brain-processed') { const d=state.brainDumps.find(x=>x.id===id); if(d){d.status='processed';saveState({render:true});} }
     if (action === 'add-idea') ideaModal();
@@ -1609,12 +1618,13 @@
   async function handleDocumentChange(e) {
     if (!(e.target instanceof HTMLElement)) return;
     const el=e.target;
-    if (el.dataset.setting) { state.settings[el.dataset.setting]=el.value; saveState({render:true}); return; }
-    if (el.dataset.sectionTheme) { if(el.value) state.settings.sectionThemes[el.dataset.sectionTheme]=el.value; else delete state.settings.sectionThemes[el.dataset.sectionTheme]; saveState({render:true}); return; }
-    if (el.id === 'custom-background-file' && el.files?.[0]) { try{state.settings.customBackgroundDataUrl=await fileToDataUrl(el.files[0],{maxWidth:1800,quality:.76}); saveState({render:true}); toast('Custom background saved.');}catch(err){alert(err.message);} return; }
-    if (el.id === 'hero-photo-file' && el.files?.[0]) { try{state.settings.heroPhotoDataUrl=await fileToDataUrl(el.files[0],{maxWidth:900,quality:.82}); saveState({render:true}); toast('Dashboard photo saved.');}catch(err){alert(err.message);} return; }
-    if (el.matches('[data-action="move-task"]')) { const t=state.tasks.find(x=>x.id===el.dataset.id); if(t){t.status=el.value;if(el.value==='complete')t.completedAt=Date.now();saveState({render:true});} }
-    if (el.matches('[data-action="move-idea"]')) { const i=state.ideas.find(x=>x.id===el.dataset.id); if(i){i.zone=el.value;saveState({render:true});} }
+    if (el.dataset.setting === 'backgroundPreset' && BACKGROUND_PRESETS.includes(el.value)) { state.settings.backgroundPreset=el.value; saveState({render:true}); return; }
+    if (el.dataset.setting === 'accentTheme' && ACCENT_THEMES.includes(el.value)) { state.settings.accentTheme=el.value; saveState({render:true}); return; }
+    if (el.dataset.sectionTheme) { const page=el.dataset.sectionTheme; if(!ROUTES.some(([id])=>id===page))return; if(el.value && ACCENT_THEMES.includes(el.value)) state.settings.sectionThemes[page]=el.value; else if(!el.value) delete state.settings.sectionThemes[page]; else return; saveState({render:true}); return; }
+    if (el.id === 'custom-background-file' && el.files?.[0]) { try{state.settings.customBackgroundDataUrl=await fileToDataUrl(el.files[0],{maxWidth:1800,quality:.76}); saveState({render:true}); toast('Custom background saved.');}catch(err){alert(err instanceof Error ? err.message : 'The background image could not be saved.');} return; }
+    if (el.id === 'hero-photo-file' && el.files?.[0]) { try{state.settings.heroPhotoDataUrl=await fileToDataUrl(el.files[0],{maxWidth:900,quality:.82}); saveState({render:true}); toast('Dashboard photo saved.');}catch(err){alert(err instanceof Error ? err.message : 'The dashboard image could not be saved.');} return; }
+    if (el.matches('[data-action="move-task"]')) { const t=state.tasks.find(x=>x.id===el.dataset.id); const nextStatus=el.value; if(t && STATUSES.includes(nextStatus)){const wasComplete=t.status==='complete';t.status=nextStatus;if(nextStatus==='complete'){if(!wasComplete)t.completedAt=Date.now();recordCompletedActivity(t.title);}else{t.completedAt=null;}saveState({render:true});} }
+    if (el.matches('[data-action="move-idea"]')) { const i=state.ideas.find(x=>x.id===el.dataset.id); if(i && IDEA_ZONES.includes(el.value)){i.zone=el.value;saveState({render:true});} }
     if (el.id === 'import-json') importJson(el.files?.[0]);
   }
   document.addEventListener('change', handleDocumentChange);
