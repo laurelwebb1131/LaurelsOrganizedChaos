@@ -1,4 +1,6 @@
-const CACHE = 'loc-planner-audit-v8';
+const CACHE_PREFIX = 'loc-planner-';
+const CACHE = `${CACHE_PREFIX}v9`;
+const NETWORK_TIMEOUT_MS = 4500;
 const APP_SHELL = [
   './',
   './index.html',
@@ -16,7 +18,11 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
+      .then(keys => Promise.all(
+        keys
+          .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+          .map(key => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -30,12 +36,22 @@ self.addEventListener('fetch', event => {
   event.respondWith(networkFirst(event.request));
 });
 
+async function fetchWithTimeout(request) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
+  try {
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function networkFirst(request) {
   const cache = await caches.open(CACHE);
   const cached = await cache.match(request);
 
   try {
-    const response = await fetch(request);
+    const response = await fetchWithTimeout(request);
     if (response.ok) {
       await cache.put(request, response.clone());
       if (request.mode === 'navigate') {
