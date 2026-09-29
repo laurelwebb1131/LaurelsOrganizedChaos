@@ -1529,7 +1529,7 @@
 
   let installPromptEvent = null;
 
-  document.addEventListener('click', async (e) => {
+  async function handleDocumentClick(e) {
     if (!(e.target instanceof Element)) return;
     const routeBtn = e.target.closest('[data-route]');
     if (routeBtn) { setRoute(routeBtn.dataset.route); closeSidebar(); return; }
@@ -1595,9 +1595,10 @@
     if (action === 'toggle-sound') { state.settings.sound=!state.settings.sound;saveState({render:true}); }
     if (action === 'export-json') exportJson();
     if (action === 'reset-data') { if(confirm('Reset the planner to starter data? This erases local changes on this browser.')){storageWriteBlockedReason='';state=defaultState();saveState({render:true});toast('Planner reset.');} }
-  });
+  }
+  document.addEventListener('click', handleDocumentClick);
 
-  document.addEventListener('change', async (e) => {
+  async function handleDocumentChange(e) {
     if (!(e.target instanceof HTMLElement)) return;
     const el=e.target;
     if (el.dataset.setting) { state.settings[el.dataset.setting]=el.value; saveState({render:true}); return; }
@@ -1607,7 +1608,8 @@
     if (el.matches('[data-action="move-task"]')) { const t=state.tasks.find(x=>x.id===el.dataset.id); if(t){t.status=el.value;if(el.value==='complete')t.completedAt=Date.now();saveState({render:true});} }
     if (el.matches('[data-action="move-idea"]')) { const i=state.ideas.find(x=>x.id===el.dataset.id); if(i){i.zone=el.value;saveState({render:true});} }
     if (el.id === 'import-json') importJson(el.files?.[0]);
-  });
+  }
+  document.addEventListener('change', handleDocumentChange);
 
   let autosaveTimeout = null;
 
@@ -1626,7 +1628,7 @@
     saveState();
   }
 
-  document.addEventListener('input', (e) => {
+  function handleDocumentInput(e) {
     const el = e.target;
     if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
 
@@ -1655,14 +1657,15 @@
       changed = true;
     }
     if (changed) scheduleAutosave();
-  });
+  }
+  document.addEventListener('input', handleDocumentInput);
 
   function formString(formData, name) {
     const value = formData.get(name);
     return typeof value === 'string' ? value.trim() : '';
   }
 
-  document.addEventListener('submit', async (e) => {
+  async function handleDocumentSubmit(e) {
     if (!(e.target instanceof HTMLFormElement)) return;
     e.preventDefault();
 
@@ -1863,7 +1866,8 @@
       renderApp();
       toast(`${createdIds.length} task${createdIds.length === 1 ? '' : 's'} created.`);
     }
-  });
+  }
+  document.addEventListener('submit', handleDocumentSubmit);
 
   function moveDashboardWidget(id, delta) {
     const order = [...state.ui.dashboardOrder];
