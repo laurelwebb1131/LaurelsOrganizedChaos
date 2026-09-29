@@ -1331,23 +1331,81 @@
 
   let modalReturnFocus = null;
 
+  function modalBackdrop() {
+    return document.getElementById('modal-backdrop');
+  }
+
+  function modalIsOpen() {
+    const backdrop = modalBackdrop();
+    return Boolean(backdrop && !backdrop.classList.contains('hidden') && backdrop.getAttribute('aria-hidden') !== 'true');
+  }
+
+  function modalFocusableElements() {
+    const backdrop = modalBackdrop();
+    if (!backdrop) return [];
+    return [...backdrop.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')]
+      .filter(el => el instanceof HTMLElement && !el.hidden && el.getClientRects().length > 0);
+  }
+
+  function focusModalStart() {
+    const body = document.getElementById('modal-body');
+    const preferred = body?.querySelector('[autofocus]');
+    if (preferred instanceof HTMLElement) {
+      preferred.focus();
+      return;
+    }
+    document.getElementById('modal-close')?.focus();
+  }
+
+  function handleModalKeydown(event) {
+    if (!modalIsOpen()) return false;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeModal();
+      return true;
+    }
+    if (event.key !== 'Tab') return false;
+
+    const focusable = modalFocusableElements();
+    if (!focusable.length) {
+      event.preventDefault();
+      document.getElementById('modal-close')?.focus();
+      return true;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    } else if (!(active instanceof Element) || !modalBackdrop()?.contains(active)) {
+      event.preventDefault();
+      first.focus();
+    }
+    return true;
+  }
+
   function openModal(title, html) {
     modalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const titleEl = document.getElementById('modal-title');
     const body = document.getElementById('modal-body');
-    const backdrop = document.getElementById('modal-backdrop');
+    const backdrop = modalBackdrop();
     if (!titleEl || !body || !backdrop) return;
     titleEl.textContent = title;
     body.innerHTML = html;
     backdrop.classList.remove('hidden');
     backdrop.setAttribute('aria-hidden','false');
-    setTimeout(() => document.getElementById('modal-close')?.focus(), 0);
+    setTimeout(focusModalStart, 0);
   }
 
   function closeModal() {
-    const backdrop = document.getElementById('modal-backdrop');
+    const backdrop = modalBackdrop();
     const body = document.getElementById('modal-body');
-    if (!backdrop || !body) return;
+    if (!backdrop || !body || backdrop.classList.contains('hidden')) return;
     backdrop.classList.add('hidden');
     backdrop.setAttribute('aria-hidden','true');
     body.innerHTML = '';
@@ -2039,13 +2097,12 @@
     renderApp();
   });
   window.addEventListener('keydown', (e) => {
+    if (handleModalKeydown(e)) return;
     const target = e.target instanceof Element ? e.target.closest('[data-action="calendar-day"]') : null;
     if (target && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      return;
     }
-    if (e.key === 'Escape') closeModal();
   });
   window.addEventListener('beforeunload', flushAutosave);
   document.addEventListener('visibilitychange', () => {
