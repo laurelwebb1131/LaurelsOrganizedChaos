@@ -1,6 +1,7 @@
 /* Laurel's Organized Chaos Planner
-   Step 1 core + Step 2 visual completion
-   Finalized for readable-source launch in Step 3. */
+   Step 3 CSS cleanup baseline.
+   Legacy interior scrapbook layers are retained only where still used.
+   The 1800s grimoire cover remains visually frozen for this cleanup. */
 
 :root {
   --bg: #100d14;
@@ -23,9 +24,39 @@
   --line: rgba(255,255,255,.1);
   --shadow: 0 16px 36px rgba(0,0,0,.32);
   --radius: 18px;
-  --sidebar: 240px;
+  --sidebar: 258px;
   --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: Georgia, "Times New Roman", serif;
+  --paper-black: #0d0b10;
+  --paper-charcoal: #171219;
+  --paper-purple: #21172a;
+  --paper-light: #ece3ef;
+  --ink-dark: #241b28;
+  --hot-ink: #ff2aa3;
+  --electric-purple: #9658ff;
+  --night-blue: #315fae;
+  --silver-ink: #c9c4ce;
+  --font-gothic: Georgia, "Book Antiqua", "Palatino Linotype", serif;
+  --font-hand: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  --accent: var(--pink);
+  --accent-soft: var(--pink-soft);
+  --accent-deep: #c91982;
+  --custom-bg-image: none;
+  --s2-paper-cream: #ece3ec;
+  --s2-paper-lilac: #d9c8e7;
+  --s2-paper-blue: #c8d8ed;
+  --s2-ink: #2a2130;
+  --s2-shadow: 0 18px 42px rgba(0,0,0,.34);
+  --s2-hand: "Segoe Print","Bradley Hand","Comic Sans MS",cursive;
+  --grimoire-paper: #d9c9a7;
+  --grimoire-paper-light: #eadfc6;
+  --grimoire-paper-dark: #b9a47d;
+  --grimoire-ink: #2c211d;
+  --grimoire-faded: #6d5a48;
+  --grimoire-leather: #17100f;
+  --grimoire-leather-2: #241714;
+  --grimoire-red: #7a243f;
+  --font-script: "Segoe Script", "Lucida Handwriting", "Brush Script MT", cursive;
 }
 
 * { box-sizing: border-box; }
@@ -220,7 +251,6 @@ a { color: var(--pink-soft); }
 .btn.danger { background: linear-gradient(135deg, #a9263b, #6e1b2a); }
 .btn.small-btn { padding: 7px 10px; font-size: .82rem; }
 .icon-btn { border: 0; background: transparent; cursor: pointer; font-size: 1.2rem; padding: 7px; }
-.scrap-link .big-icon { font-size: 1.7rem; }
 
 .status-pill, .tag {
   display: inline-flex;
@@ -372,7 +402,7 @@ input::placeholder, textarea::placeholder { color: #776d7e; }
 
 body.quieter { --pink: #e45aaf; --purple: #795ab8; }
 body.quieter::before { opacity: .1; }
-body.quieter .nav-link:nth-child(n), body.quieter .scrap-link:nth-child(n), body.quieter .polaroid:nth-child(n) { transform: none; }
+body.quieter .nav-link:nth-child(n), body.quieter .polaroid:nth-child(n) { transform: none; }
 body.quieter .hero::after { opacity: .35; }
 
 @media (max-width: 1100px) {
@@ -386,7 +416,7 @@ body.quieter .hero::after { opacity: .35; }
   .mobile-title { font-family: var(--font-display); font-size: .95rem; }
   #main-content { margin-left: 0; width: 100%; padding: 20px 14px 80px; }
   .floating-add { bottom: 18px; right: 18px; }
-  .grid-2, .grid-3, .grid-4, .scrap-nav, .form-grid.two { grid-template-columns: 1fr; }
+  .grid-2, .grid-3, .form-grid.two { grid-template-columns: 1fr; }
   .anchor-timeline { grid-template-columns: 1fr 1fr; }
   .hero { min-height: auto; padding: 24px 18px; }
   .hero::after { display: none; }
@@ -395,26 +425,12 @@ body.quieter .hero::after { opacity: .35; }
   .anchor-timeline { grid-template-columns: 1fr; }
   .timer-time { font-size: 3.7rem; }
 }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-}
+
 
 /* =========================================================
    SCRAPBOOK VISUAL PASS v2
    ========================================================= */
-:root {
-  --paper-black: #0d0b10;
-  --paper-charcoal: #171219;
-  --paper-purple: #21172a;
-  --paper-light: #ece3ef;
-  --ink-dark: #241b28;
-  --hot-ink: #ff2aa3;
-  --electric-purple: #9658ff;
-  --night-blue: #315fae;
-  --silver-ink: #c9c4ce;
-  --font-gothic: Georgia, "Book Antiqua", "Palatino Linotype", serif;
-  --font-hand: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
-}
+
 
 body {
   background:
@@ -447,7 +463,7 @@ body::after {
   border-right: 1px solid rgba(255,42,163,.18);
   box-shadow: 16px 0 38px rgba(0,0,0,.28);
 }
-:root { --sidebar: 258px; }
+
 .brand-mini {
   position: relative;
   margin: 2px 5px 17px;
@@ -801,7 +817,6 @@ body::after {
   position:relative;
   min-height:120px;
   border-radius:3px 9px 4px 8px;
-  background:rgba(255,255,255,.025);
   border:1px solid rgba(255,255,255,.075);
 }
 .calendar-cell::before { content:""; position:absolute; left:0;top:0;width:3px;height:100%;background:var(--month-accent);opacity:.15; }
@@ -820,7 +835,6 @@ body::after {
 
 /* generic card refinements */
 .card { border-radius:5px 14px 6px 16px; }
-.card.torn { clip-path:polygon(0 2%,5% 0,11% 1%,16% 0,22% 1%,28% 0,34% 1%,40% 0,47% 1%,54% 0,60% 1%,67% 0,74% 1%,81% 0,88% 1%,95% 0,100% 2%,99% 98%,94% 100%,86% 99%,78% 100%,70% 99%,62% 100%,55% 99%,47% 100%,39% 99%,31% 100%,24% 99%,16% 100%,8% 99%,1% 100%); }
 .section-title h2 { font-family:var(--font-gothic); }
 .section-title h2::first-letter { color:var(--pink-soft); }
 .note-paper { border-radius:2px 7px 3px 8px; }
@@ -829,11 +843,7 @@ body.quieter .dashboard-widget:nth-child(n),
 body.quieter .tarot-link:nth-child(n),
 body.quieter .today-date-stamp,
 body.quieter .mood-polaroid,
-body.quieter .anchor-ticket:nth-child(n),
-body.quieter .hero-paper,
-body.quieter .hero-polaroid { transform:none; }
-body.quieter .hot-doodle, body.quieter .hero-owl { display:none; }
-body.quieter .scrapbook-hero::before { opacity:.2; }
+body.quieter .anchor-ticket:nth-child(n) { transform:none; }
 
 @media (max-width: 1180px) {
   .tarot-nav-grid { grid-template-columns:repeat(3,1fr); }
@@ -883,12 +893,7 @@ body.quieter .scrapbook-hero::before { opacity:.2; }
 }
 
 /* ===== Final personalization layer ===== */
-:root {
-  --accent: var(--pink);
-  --accent-soft: var(--pink-soft);
-  --accent-deep: #c91982;
-  --custom-bg-image: none;
-}
+
 body[data-accent="purple"] { --accent: var(--purple); --accent-soft:#c49cff; --accent-deep:#6630d5; }
 body[data-accent="blue"] { --accent: var(--blue); --accent-soft:#8bb8ff; --accent-deep:#245fcc; }
 body[data-accent="silver"] { --accent:#d6d3df; --accent-soft:#f2eff8; --accent-deep:#858090; }
@@ -1075,14 +1080,14 @@ body[data-accent] .status-pill.in-progress, body[data-accent] .mood-chip.selecte
 .page-theme-list label { display:grid; grid-template-columns:1fr 150px; gap:10px; align-items:center; }
 .storage-note { border-left:4px solid var(--accent); }
 
-@media(max-width:900px){
+@media (max-width: 900px){
   .settings-grid { grid-template-columns:1fr; }
   .sticker-tray { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .planner-edit-toolbar { right:10px; bottom:12px; max-width:calc(100vw - 20px); flex-wrap:wrap; }
   .scrapbook-board { min-height:760px; }
   .board-polaroid { width:180px; }
 }
-@media(max-width:520px){
+@media (max-width: 520px){
   .page-theme-list label { grid-template-columns:1fr; }
   .planner-edit-toolbar .btn { padding:8px 10px; font-size:.78rem; }
   .board-polaroid { width:155px; }
@@ -1091,14 +1096,7 @@ body[data-accent] .status-pill.in-progress, body[data-accent] .mood-chip.selecte
 
 /* ===== Step 2 visual completion layer ===== */
 /* Laurel's Organized Chaos Planner | Step 2 visual completion layer */
-:root {
-  --s2-paper-cream:#ece3ec;
-  --s2-paper-lilac:#d9c8e7;
-  --s2-paper-blue:#c8d8ed;
-  --s2-ink:#2a2130;
-  --s2-shadow:0 18px 42px rgba(0,0,0,.34);
-  --s2-hand:"Segoe Print","Bradley Hand","Comic Sans MS",cursive;
-}
+
 
 /* page chapter identity */
 body[data-step2-page] #main-content { position:relative; }
@@ -1276,15 +1274,15 @@ body[data-step2-page="settings"] .settings-grid { align-items:start; }
 body[data-step2-page="settings"] .settings-card { box-shadow:0 15px 30px rgba(0,0,0,.24); }
 body[data-step2-page="settings"] .settings-card:nth-child(odd) { transform:rotate(-.1deg); }
 body[data-step2-page="settings"] .settings-card:nth-child(even) { transform:rotate(.1deg); }
-body[data-step2-page="settings"] .theme-swatch,body[data-step2-page="settings"] .background-choice { transition:transform .14s ease; }
-body[data-step2-page="settings"] .theme-swatch:hover,body[data-step2-page="settings"] .background-choice:hover { transform:translateY(-2px) scale(1.03); }
+body[data-step2-page="settings"] .theme-swatch { transition:transform .14s ease; }
+body[data-step2-page="settings"] .theme-swatch:hover { transform:translateY(-2px) scale(1.03); }
 body[data-step2-page="settings"] .file-drop { border-style:dashed; }
 
 /* edit mode should look like a scrapbook desk, not an error state */
 body.step2-editing .page { padding-bottom:70px; }
-body.step2-editing .planner-section-editing,body.step2-editing .section-editable { background:color-mix(in srgb,var(--accent,var(--pink)) 3%,transparent); }
+body.step2-editing .planner-section-editing { background:color-mix(in srgb,var(--accent,var(--pink)) 3%,transparent); }
 body.step2-editing .planner-edit-toolbar { border-color:color-mix(in srgb,var(--accent,var(--pink)) 50%,rgba(255,255,255,.18)); box-shadow:0 16px 36px rgba(0,0,0,.35); }
-body.step2-editing .placed-sticker,body.step2-editing .planner-decoration { filter:drop-shadow(0 10px 10px rgba(0,0,0,.32)); }
+body.step2-editing .placed-sticker { filter:drop-shadow(0 10px 10px rgba(0,0,0,.32)); }
 
 /* custom scrollbars for dense planner areas */
 body[data-step2-page] * { scrollbar-width:thin; scrollbar-color:color-mix(in srgb,var(--accent,var(--pink)) 45%,#49404f) rgba(255,255,255,.04); }
@@ -1292,12 +1290,12 @@ body[data-step2-page] *::-webkit-scrollbar { width:8px; height:8px; }
 body[data-step2-page] *::-webkit-scrollbar-thumb { background:color-mix(in srgb,var(--accent,var(--pink)) 42%,#504756); border-radius:999px; }
 
 /* responsive completion */
-@media (max-width:1100px) {
+@media (max-width: 1100px) {
   body[data-step2-page="calendar"] .calendar-cell { min-height:100px; }
   body[data-step2-page="week"] .kanban { grid-template-columns:repeat(2,minmax(0,1fr)); }
   body[data-step2-page="home"] .home-board-grid .card { min-height:auto; }
 }
-@media (max-width:900px) {
+@media (max-width: 900px) {
   .step2-chapter-tab { top:64px; right:12px; opacity:.82; }
   .step2-page-flourish { width:100px; height:100px; top:110px; }
   body[data-step2-page="week"] .kanban { grid-template-columns:1fr 1fr; }
@@ -1305,20 +1303,20 @@ body[data-step2-page] *::-webkit-scrollbar-thumb { background:color-mix(in srgb,
   body[data-step2-page="calendar"] .calendar-cell { min-height:88px; padding:7px; }
   body[data-step2-page="school"] .course-card,body[data-step2-page="projects"] .project-card { min-height:auto; }
 }
-@media (max-width:680px) {
+@media (max-width: 680px) {
   .step2-chapter-tab { display:none; }
   body[data-step2-page] .page-banner { margin-bottom:20px; }
   body[data-step2-page="week"] .weekly-focus-grid,body[data-step2-page="week"] .week-top-three,body[data-step2-page="week"] .kanban { grid-template-columns:1fr; }
   body[data-step2-page="week"] .weekly-focus-grid .card { min-height:auto; transform:none!important; }
   body[data-step2-page="calendar"] .month-spread { display:block; }
   body[data-step2-page="calendar"] .calendar-shell { overflow-x:auto; padding-bottom:6px; }
-  body[data-step2-page="calendar"] .calendar-grid,body[data-step2-page="calendar"] .calendar-weekdays { min-width:680px; }
+  body[data-step2-page="calendar"] .calendar-grid { min-width:680px; }
   body[data-step2-page="calendar"] .calendar-cell { min-height:92px; }
   body[data-step2-page="goals"] .idea-zones { grid-template-columns:1fr; }
   body[data-step2-page="goals"] .idea-zone { min-height:auto; }
   body[data-step2-page="brain"] .note-paper textarea { padding-left:26px; }
 }
-@media (max-width:520px) {
+@media (max-width: 520px) {
   body[data-step2-page="today"] .today-title-note::after { font-size:.68rem; }
   body[data-step2-page="today"] .anchor-ribbon::before { display:none; }
   body[data-step2-page="school"] .course-card,body[data-step2-page="projects"] .project-card,body[data-step2-page="brain"] .brain-archive .card { transform:none!important; }
@@ -1327,25 +1325,12 @@ body[data-step2-page] *::-webkit-scrollbar-thumb { background:color-mix(in srgb,
   .step2-page-flourish { display:none; }
 }
 
-@media (prefers-reduced-motion:reduce) {
-  body[data-step2-page] .card,body[data-step2-page] .polaroid,body[data-step2-page] .calendar-cell { transition:none!important; transform:none!important; }
-}
 
 /* =========================================================
    DASHBOARD GRIMOIRE PASS
    Real spellbook journal opening spread
    ========================================================= */
-:root {
-  --grimoire-paper: #d9c9a7;
-  --grimoire-paper-light: #eadfc6;
-  --grimoire-paper-dark: #b9a47d;
-  --grimoire-ink: #2c211d;
-  --grimoire-faded: #6d5a48;
-  --grimoire-leather: #17100f;
-  --grimoire-leather-2: #241714;
-  --grimoire-red: #7a243f;
-  --font-script: "Segoe Script", "Lucida Handwriting", "Brush Script MT", cursive;
-}
+
 
 .dashboard-grimoire,
 .dashboard-grimoire button,
@@ -2175,8 +2160,7 @@ body[data-step2-page] *::-webkit-scrollbar-thumb { background:color-mix(in srgb,
 
 /* handwritten buttons and text within the dashboard */
 .dashboard-grimoire .btn,
-.dashboard-grimoire .small-btn,
-.dashboard-grimoire .text-link {
+.dashboard-grimoire .small-btn {
   font-family: var(--font-hand);
 }
 .dashboard-grimoire .muted { color: #8f828c; }
@@ -2775,8 +2759,21 @@ body.cover-mode #main-content {
   .frame-inner { inset: 8.3% 8.8% 8.1% 11%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cover-open-plaque { transition: none; }
-  .antique-book-cover { transform: none; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  body[data-step2-page] .card,
+  body[data-step2-page] .polaroid,
+  body[data-step2-page] .calendar-cell {
+    transform: none !important;
+  }
+
+  .antique-book-cover {
+    transform: none;
+  }
 }
 
 .planner-loading{min-height:100vh;padding:32px;display:grid;align-content:center;justify-items:center;gap:10px;background:#120b08;color:#eee4cf;font-family:Georgia,"Times New Roman",serif;text-align:center}.planner-loading h1,.planner-loading p{margin:0;max-width:680px}.planner-loading p{color:#b9aa91;line-height:1.6}
