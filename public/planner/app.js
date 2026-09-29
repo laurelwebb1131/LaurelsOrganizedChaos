@@ -1096,6 +1096,19 @@
     saveState({ render: true });
   }
 
+  function finishTimerEarly() {
+    if (!state.timer.running) return;
+    const remainingMs = timerRemainingMs();
+    stopTimerTicker();
+    state.timer.running = false;
+    state.timer.paused = false;
+    state.timer.endAt = null;
+    state.timer.remainingMs = remainingMs;
+    saveState();
+    renderApp();
+    timerCompletionModal();
+  }
+
   function beep() {
     try {
       const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -1490,7 +1503,7 @@
     if (action === 'timer-start-60') startTimer(60);
     if (action === 'timer-pause') pauseResumeTimer();
     if (action === 'timer-reset') resetTimer();
-    if (action === 'timer-finish') timerCompletionModal();
+    if (action === 'timer-finish') finishTimerEarly();
     if (action === 'timer-choice') handleTimerChoice(el.dataset.choice);
     if (action === 'calendar-prev') changeCalendar(-1);
     if (action === 'calendar-next') changeCalendar(1);
@@ -1828,15 +1841,20 @@
     order.splice(from,1); order.splice(to,0,draggedId); state.ui.todaySectionOrder=order; saveState({render:true});
   }
 
+  function recordCompletedActivity(title) {
+    const day = ensureToday();
+    if (!day.completedActivities.includes(title)) day.completedActivities.push(title);
+  }
+
   function completeTask(id) {
     const t=state.tasks.find(x=>x.id===id); if(!t)return;
-    if(t.status==='complete'){t.status='ready';t.completedAt=null;}else{t.status='complete';t.completedAt=Date.now();ensureToday().completedActivities.push(t.title);}
+    if(t.status==='complete'){t.status='ready';t.completedAt=null;}else{t.status='complete';t.completedAt=Date.now();recordCompletedActivity(t.title);}
     saveState({render:true});
   }
 
   function handleTimerChoice(choice) {
     const id=state.timer.taskId; const t=state.tasks.find(x=>x.id===id);
-    if(choice==='complete' && t){t.status='complete';t.completedAt=Date.now();ensureToday().completedActivities.push(t.title);}
+    if(choice==='complete' && t){t.status='complete';t.completedAt=Date.now();recordCompletedActivity(t.title);}
     if(choice==='another'){closeModal();startTimer(30,id);return;}
     if(choice==='postpone' && t)t.status='postponed';
     if(choice==='switch' && t)t.status='ready';
