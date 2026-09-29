@@ -7,7 +7,7 @@
 
   const STORAGE_KEY = 'loc_planner_v1';
   const STATE_VERSION = 1;
-  const UNSUPPORTED_STATE_BACKUP_KEY = `${STORAGE_KEY}_unsupported_recovery`;
+  const STATE_RECOVERY_KEY = `${STORAGE_KEY}_recovery`;
   const ROUTES = [
     ['dashboard', '✦', 'Dashboard'],
     ['today', '🖤', 'Today'],
@@ -522,14 +522,18 @@
     };
   }
 
-  function preserveUnsupportedState(raw, version) {
-    storageWriteBlockedReason = `Planner data version ${String(version)} is not supported by this build.`;
+  function preserveUnreadableState(raw, reason) {
+    storageWriteBlockedReason = reason;
     try {
-      localStorage.setItem(UNSUPPORTED_STATE_BACKUP_KEY, raw);
+      localStorage.setItem(STATE_RECOVERY_KEY, raw);
     } catch (backupError) {
-      console.error('Could not preserve the unsupported planner state recovery copy', backupError);
+      console.error('Could not preserve the planner state recovery copy', backupError);
     }
-    console.warn(`${storageWriteBlockedReason} The original JSON was preserved under ${UNSUPPORTED_STATE_BACKUP_KEY} and automatic writes are blocked.`);
+    console.warn(`${storageWriteBlockedReason} The original stored value was preserved under ${STATE_RECOVERY_KEY} and automatic writes are blocked.`);
+  }
+
+  function preserveUnsupportedState(raw, version) {
+    preserveUnreadableState(raw, `Planner data version ${String(version)} is not supported by this build.`);
   }
 
   function parseCompatibleState(raw, { preserveUnsupported = false } = {}) {
@@ -553,11 +557,15 @@
   }
 
   function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return defaultState();
       return parseCompatibleState(raw, { preserveUnsupported: true });
     } catch (err) {
+      if (!storageWriteBlockedReason) {
+        const reason = err instanceof Error ? err.message : 'Stored planner data could not be read.';
+        preserveUnreadableState(raw, reason);
+      }
       console.warn('Could not load planner data', err);
       return defaultState();
     }
@@ -2143,6 +2151,10 @@
       lastPersistedStateJson = JSON.stringify(state);
       renderApp();
     } catch (error) {
+      if (e.newValue && !storageWriteBlockedReason) {
+        const reason = error instanceof Error ? error.message : 'Planner data from another tab could not be read.';
+        preserveUnreadableState(e.newValue, reason);
+      }
       console.warn('Could not sync planner data from another tab', error);
     }
   });
