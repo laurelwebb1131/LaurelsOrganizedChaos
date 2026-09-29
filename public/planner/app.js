@@ -2229,7 +2229,7 @@
 })();
 
 
-/* ===== Legacy visual annotation layer; preserve until CSS cleanup ===== */
+/* ===== Interior visual annotation compatibility layer; retained until the future grimoire redesign ===== */
 (() => {
   'use strict';
 
