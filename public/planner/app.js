@@ -1509,6 +1509,7 @@
     const safeMaxWidth = Math.max(1, finiteNumber(maxWidth, 1400));
     const safeQuality = Math.max(.1, Math.min(.95, finiteNumber(quality, .82)));
     const maxCanvasPixels = 3_000_000;
+    const maxCanvasDimension = 4096;
     const raw = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ''));
@@ -1523,7 +1524,8 @@
           if (!img.width || !img.height) throw new Error('The selected image has invalid dimensions.');
           const widthScale = safeMaxWidth / img.width;
           const pixelScale = Math.sqrt(maxCanvasPixels / (img.width * img.height));
-          const ratio = Math.min(1, widthScale, pixelScale);
+          const dimensionScale = maxCanvasDimension / Math.max(img.width, img.height);
+          const ratio = Math.min(1, widthScale, pixelScale, dimensionScale);
           const canvas = document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(img.width * ratio));
           canvas.height = Math.max(1, Math.round(img.height * ratio));
