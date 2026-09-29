@@ -6,6 +6,8 @@
   'use strict';
 
   const STORAGE_KEY = 'loc_planner_v1';
+  const STATE_VERSION = 1;
+  const UNSUPPORTED_STATE_BACKUP_KEY = `${STORAGE_KEY}_unsupported_recovery`;
   const ROUTES = [
     ['dashboard', '✦', 'Dashboard'],
     ['today', '🖤', 'Today'],
@@ -54,6 +56,7 @@
     12: { name: 'December', phrase: 'Finish what matters. Keep the memories.', mark: '✦', className: 'month-december' }
   };
 
+  let storageWriteBlockedReason = '';
   let state = loadState();
   let lastPersistedStateJson = JSON.stringify(state);
   let timerInterval = null;
@@ -115,7 +118,7 @@
     const now = Date.now();
     const today = isoDateLocal();
     return {
-      version: 1,
+      version: STATE_VERSION,
       settings: { themeIntensity: 'full', sound: true, backgroundPreset: 'black-paper', accentTheme: 'pink', customBackgroundDataUrl: '', heroPhotoDataUrl: '', sectionThemes: {} },
       tasks: [
         { id: 'task_entr150_w4', title: 'ENTR150 W4: Draft Lean Canvas Solutions', description: 'Draft three solutions, one for each customer problem.', status: 'ready', priority: 'high', category: 'college', scheduledDate: null, deadline: null, durationMinutes: 30, timerType: 'standard', nextStep: 'Open Week 3 Lean Canvas and draft the three Solutions entries first.', waitingOn: '', projectId: null, createdAt: now, completedAt: null },
@@ -500,7 +503,7 @@
     };
 
     return {
-      version: 1,
+      version: STATE_VERSION,
       settings,
       tasks: normalizeTasks(source.tasks, fresh.tasks),
       dailyEntries: normalizeDailyEntries(source.dailyEntries, fresh.dailyEntries),
@@ -519,12 +522,36 @@
     };
   }
 
+  function preserveUnsupportedState(raw, version) {
+    storageWriteBlockedReason = `Planner data version ${String(version)} is not supported by this build.`;
+    try {
+      localStorage.setItem(UNSUPPORTED_STATE_BACKUP_KEY, raw);
+    } catch (backupError) {
+      console.error('Could not preserve the unsupported planner state recovery copy', backupError);
+    }
+    console.warn(`${storageWriteBlockedReason} The original JSON was preserved under ${UNSUPPORTED_STATE_BACKUP_KEY} and automatic writes are blocked.`);
+  }
+
+  function restoreLastPersistedState() {
+    try {
+      state = hydrateState(JSON.parse(lastPersistedStateJson));
+      return true;
+    } catch (restoreError) {
+      console.error('Could not restore the last saved planner state', restoreError);
+      return false;
+    }
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaultState();
       const parsed = JSON.parse(raw);
-      if (!parsed || parsed.version !== 1) return defaultState();
+      if (!isPlainObject(parsed)) throw new Error('Stored planner data is not an object.');
+      if (parsed.version !== STATE_VERSION) {
+        preserveUnsupportedState(raw, parsed.version);
+        return defaultState();
+      }
       return hydrateState(parsed);
     } catch (err) {
       console.warn('Could not load planner data', err);
@@ -533,17 +560,22 @@
   }
 
   function saveState({ render = false } = {}) {
+    if (storageWriteBlockedReason) {
+      console.error('Planner save blocked:', storageWriteBlockedReason);
+      restoreLastPersistedState();
+      toast('This planner data was created by an unsupported version, so this build will not overwrite it. Import a compatible backup or reset the planner to continue.');
+      applyTheme();
+      if (render) renderApp();
+      return false;
+    }
+
     try {
       const serialized = JSON.stringify(state);
       localStorage.setItem(STORAGE_KEY, serialized);
       lastPersistedStateJson = serialized;
     } catch (err) {
       console.error('Could not save planner data', err);
-      try {
-        state = hydrateState(JSON.parse(lastPersistedStateJson));
-      } catch (restoreError) {
-        console.error('Could not restore the last saved planner state', restoreError);
-      }
+      restoreLastPersistedState();
       toast('That change could not be saved. The planner restored your last saved state. Export a backup and remove a few large photos or backgrounds.');
       applyTheme();
       if (render) renderApp();
@@ -1487,7 +1519,7 @@
     if (action === 'toggle-theme') { state.settings.themeIntensity = state.settings.themeIntensity==='full'?'quiet':'full'; saveState({render:true}); }
     if (action === 'toggle-sound') { state.settings.sound=!state.settings.sound;saveState({render:true}); }
     if (action === 'export-json') exportJson();
-    if (action === 'reset-data') { if(confirm('Reset the planner to starter data? This erases local changes on this browser.')){state=defaultState();saveState({render:true});toast('Planner reset.');} }
+    if (action === 'reset-data') { if(confirm('Reset the planner to starter data? This erases local changes on this browser.')){storageWriteBlockedReason='';state=defaultState();saveState({render:true});toast('Planner reset.');} }
   });
 
   document.addEventListener('change', async (e) => {
@@ -1859,7 +1891,7 @@
       if (file.size > 15 * 1024 * 1024) throw new Error('That backup is unusually large. Choose an Organized Chaos JSON backup under 15 MB.');
       const text = await file.text();
       const parsed = JSON.parse(text);
-      const looksValid = parsed && parsed.version === 1 && Array.isArray(parsed.tasks) && parsed.dailyEntries && typeof parsed.dailyEntries === 'object';
+      const looksValid = parsed && parsed.version === STATE_VERSION && Array.isArray(parsed.tasks) && parsed.dailyEntries && typeof parsed.dailyEntries === 'object';
       if (!looksValid) throw new Error('This does not look like a valid Organized Chaos planner backup.');
       const restored = hydrateState(parsed);
       if (!Array.isArray(restored.routineAnchors) || !Array.isArray(restored.projects) || !Array.isArray(restored.schoolAssignments)) {
@@ -1867,9 +1899,12 @@
       }
       if (!confirm('Import this backup and replace current local planner data? A temporary pre-import recovery copy will be saved in this browser first.')) return;
       const previousState = state;
+      const previousStorageBlock = storageWriteBlockedReason;
       try { localStorage.setItem(STORAGE_KEY + '-pre-import', JSON.stringify(previousState)); } catch (_) {}
+      storageWriteBlockedReason = '';
       state = restored;
       if (!saveState()) {
+        storageWriteBlockedReason = previousStorageBlock;
         state = previousState;
         renderApp();
         throw new Error('The backup was valid, but the browser could not store it. Your previous planner data is still active.');
